@@ -1,4 +1,4 @@
-//var Tone = require('../../WatsonApi/ToneAnalyzer.js');
+var Tone = require('../WatsonApi/ToneAnalyzer.js');
 
 module.exports = {
 	// 1) Trend Over Time
@@ -13,10 +13,9 @@ module.exports = {
 	},
 	// 3) Emotion Graph
 	// Watson Tone Analyzer
-	createEmotionGraph: function(textData) {
-   console.log(textData, 'Expect text to be an article');
-   // return Tone.sendData(textData);
-   return textData.val;
+	createEmotionGraph: function(rawData) {
+   //console.log(rawData, 'Expect text to be article info');
+   return Tone.sendData(rawData);
 	},
 	// 4) News Site Favorability 
 	// Watson ...

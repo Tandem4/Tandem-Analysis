@@ -1,8 +1,9 @@
 var watson = require('watson-developer-cloud');
+var config = require('../../../env/client-config');
 
 var tone_analyzer = watson.tone_analyzer({
-  username: process.env.TONE_USERNAME,
-  password: process.env.TONE_PASSWORD,
+  username: config.TONE_USERNAME,
+  password: config.TONE_PASSWORD,
   version: 'v3',
   version_date: '2016-05-19'
 });
@@ -11,7 +12,7 @@ module.exports = {
   sendData: function(textData) {
     tone_analyzer.tone({ text: textData }, function(err, tone) {
       if (err) {
-        console.log('createTrendOverTime error', err);
+        console.log('createEmotionGraph error', err);
       }
       else {
         if(tone.document_tone.tone_categories === undefined) {
