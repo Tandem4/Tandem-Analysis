@@ -1,2 +1,2 @@
 var express = require('express');
-var router = require('passpowrt')
+var router = require('passport');
