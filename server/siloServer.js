@@ -13,7 +13,6 @@ require('./routes/view-routes.js')(app);
 FetchData();
 
 
-
 app.listen(3030, function() {
   console.log('Silo Server Operational on port 3030')
 }); 

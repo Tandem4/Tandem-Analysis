@@ -6,6 +6,7 @@
     "start": "node node_modules/react-native/local-cli/cli.js start"
   },
   "dependencies": {
+    "alchemy-api": "^1.3.2",
     "babel-core": "^6.7.7",
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.4",
@@ -21,6 +22,7 @@
     "eslint-plugin-babel": "^3.2.0",
     "eslint-plugin-react": "^5.0.1",
     "express": "^4.13.4",
+    "mongodb": "^2.1.18",
     "raven-js": "^2.3.0",
     "react": "15.0.2",
     "react-addons-css-transition-group": "^15.0.2",
@@ -37,6 +39,7 @@
     "redbox-react": "^1.2.3",
     "redux": "^3.5.2",
     "redux-thunk": "^2.1.0",
+    "request": "^2.72.0",
     "rimraf": "^2.5.2",
     "style-loader": "^0.13.1",
     "stylus": "^0.54.5",

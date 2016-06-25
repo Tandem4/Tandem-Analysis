@@ -1,17 +1,16 @@
 var Tone = require('../WatsonApi/ToneAnalyzer.js');
 var Alchemy = require('../services/AlchemyLanguageService.js');
+var config = require('../../../env/client-config');
 
 module.exports = {
 	// 1) Sentiment Analysis
 	// Watson ...
 	createSentiment: function(rawData) {
-   //console.log(rawData, 'Expect text to be article info');
-   //return Tone.sendData(rawData);
-   return Alchemy.sendData(rawData.article_url)
+    Alchemy.sendData(config.SENTIMENT_URL, rawData.article_url)
 	},
-	// 2) Tone
+	// 2) Emotion Analysis
 	// Watson ...
-  createSiteFavorability: function(req, res) {
-
+  createEmotion: function(rawData) {
+    Alchemy.sendData(config.EMOTION_URL, rawData.article_url)
   },
 }

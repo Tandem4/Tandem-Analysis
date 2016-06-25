@@ -1,5 +1,7 @@
 var watson = require('watson-developer-cloud');
 var config = require('../../../env/client-config');
+var Tandem = require('../services/TandemAnalyzeService.js');
+
 
 var tone_analyzer = watson.tone_analyzer({
   username: config.TONE_USERNAME,
@@ -7,6 +9,8 @@ var tone_analyzer = watson.tone_analyzer({
   version: 'v3',
   version_date: '2016-05-19'
 });
+
+
 
 module.exports = {
   sendData: function(textData) {
@@ -18,7 +22,9 @@ module.exports = {
         if(tone.document_tone.tone_categories === undefined) {
           res.status(400).send('createTrendOverTime failed to produce usable data.');
         }
-        console.log(tone.document_tone.tone_categories[0].tones, 'Expect anger score to register');
+
+        console.log('Expect anger score to register', tone.document_tone.tone_categories[0].tones);
+
         var textObj = {
           anger: tone.document_tone.tone_categories[0].tones[0].score*100,
           disgust: tone.document_tone.tone_categories[0].tones[1].score*100,
@@ -36,8 +42,9 @@ module.exports = {
           // userId: req.user.id, 
           // sessionId: req.body.sessionId 
         }
-        console.log(textObj, 'Expect textObj to have emotion-number pairs');
-        return textObj;
+        //console.log(textObj, 'Expect textObj to have emotion-number pairs');
+        // create general tone 
+        Tandem.createGeneralTone(textObj);
       }
     });
   }
