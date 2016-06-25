@@ -41,3 +41,5 @@ android/keystores/debug.keystore
 
 # ENV
 env/
+=======
+node_modules/

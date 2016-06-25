@@ -1,4 +1,5 @@
 {
+<<<<<<< bfc6d2b16b3a268087e361d1de68d7681250e618
   "name": "NewsFeed",
   "version": "0.0.1",
   "private": true,
@@ -69,4 +70,26 @@
   "license": "Hello",
   "description": "A NewsFeed View",
   "main": "index.ios.js"
+=======
+  "name": "tandem-trends",
+  "version": "1.0.0",
+  "description": "Trend Ranking Service for Tandem",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NCSkoglund/Tandem-Trends-Service.git"
+  },
+  "author": "NCSkoglund",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NCSkoglund/Tandem-Trends-Service/issues"
+  },
+  "homepage": "https://github.com/NCSkoglund/Tandem-Trends-Service#readme",
+  "dependencies": {
+    "request": "^2.72.0"
+  }
+>>>>>>> Associate an array of keywords with an article
 }
