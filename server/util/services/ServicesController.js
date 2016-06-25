@@ -1,23 +1,15 @@
 var Tone = require('../WatsonApi/ToneAnalyzer.js');
+var Alchemy = require('../services/AlchemyLanguageService.js');
 
 module.exports = {
-	// 1) Trend Over Time
-	// Needs Google Trends API
-  createTrendOverTime: function(textData) {
-    
-  },
-	// 2) Overall Favorabiltiy 
-	// ???
-	createTopicFavorability: function(textData) {
-
-	},
-	// 3) Emotion Graph
-	// Watson Tone Analyzer
-	createEmotionGraph: function(rawData) {
+	// 1) Sentiment Analysis
+	// Watson ...
+	createSentiment: function(rawData) {
    //console.log(rawData, 'Expect text to be article info');
-   return Tone.sendData(rawData);
+   //return Tone.sendData(rawData);
+   return Alchemy.sendData(rawData.article_url)
 	},
-	// 4) News Site Favorability 
+	// 2) Tone
 	// Watson ...
   createSiteFavorability: function(req, res) {
 
