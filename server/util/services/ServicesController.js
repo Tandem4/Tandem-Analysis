@@ -6,11 +6,11 @@ module.exports = {
 	// 1) Sentiment Analysis
 	// Watson ...
 	createSentiment: function(rawData) {
-    Alchemy.sendData(config.SENTIMENT_URL, rawData.article_url)
+    Alchemy.sendData(config.SENTIMENT_URL, rawData)
 	},
 	// 2) Emotion Analysis
 	// Watson ...
   createEmotion: function(rawData) {
-    Alchemy.sendData(config.EMOTION_URL, rawData.article_url)
+    Alchemy.sendData(config.EMOTION_URL, rawData)
   },
 }
