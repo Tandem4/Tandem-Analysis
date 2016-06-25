@@ -1,6 +1,12 @@
+const async = require('async');
 const request = require('request');
+const _ = require('underbar');
 const API_KEY = process.env.TANDEM_API_KEY;
 const RELEVANCE = 0.5;
+
+// ************************************
+//  Fetch Records from Analysis Service
+// ************************************
 
 // 1) Decide how to interface with Analysis service and implement queue system
 //    assume this represents a batch of article urls
@@ -12,68 +18,92 @@ var testUrls = [
   'http://www.bbc.com/sport/cricket/36626699'
 ];
 
+// *********************************
+//  Trend analysis
+// *********************************
+// Rate limit: 1000 API calls per day, 500 records max
 
-// 2) How many ways can articles share trends?  Can articles host multiple trends?
-// relevant categories: entities/keywords/concepts/taxonomy
+// helper method for singleWatsonRequest
+var filterResults = function(results, prop) {
+  return results[prop].filter( function(item) {
+    return parseFloat(item.relevance) > RELEVANCE;
+  }).map( function(filtered) {
+    return filtered.text.toLowerCase();
+  });
+};
 
-// So far: This pulls out the top 10 entities from a single Watson response, and filters for relevance > .5.
-var parsedEntities;
-var parsedConcepts;
+// Query Watson API for entities & concepts and attach to an article
+var singleWatsonRequest = function(url, callback) {
 
-// can these be set up as promises?
+  request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + API_KEY + '&url=' + url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
+    if (err) { console.log('An error occurred: ', err); }
 
-// First query Watson API for entities
-request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + API_KEY + '&url=' + testUrl1 + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
-  if (err) { console.log('There was an error in index.js', err) }
-  if (!err && response.statusCode === 200) {
-    var entityResults = JSON.parse(body);
+    var parsedEntities = filterResults(JSON.parse(body), 'entities');
 
-    parsedEntities = entityResults.entities.filter( function(entity) {
-      if (parseFloat(entity.relevance) > RELEVANCE) { return entity; }
-    }).map( function(filtered) {
-      return filtered.text;
-    });
-
-    // Next query for concepts
     request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + API_KEY + '&url=' + testUrl1 + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
-      if (err) { console.log('There was an error in index.js', err) }
-      if (!err && response.statusCode === 200) {
-        var conceptResults = JSON.parse(body);
+      if (err) { console.log('An error occurred: ', err); }
 
-        parsedConcepts = entityResults.entities.filter( function(entity) {
-          if (parseFloat(entity.relevance) > RELEVANCE) { return entity; }
-        }).map( function(filtered) {
-          return filtered.text;
-        });
+      var parsedConcepts = filterResults(JSON.parse(body), 'concepts');
+      var trends = parsedEntities.concat(parsedConcepts);
+      var article = {
+        url: url,
+        trends: _.uniq(trends)
+      };
 
-        // merge these into an array of keywords and pair with this article
-        var trends = parsedEntities.concat(parsedConcepts);
-        var article = {
-          url: testUrl1,
-          trends: trends
-        }
-        console.log(article);
-      }
+      callback(null, article);
     });
+  });
+};
 
+// Loop through the current batch of urls to append trends for each item
+// 1st para in async.each() is the array of items
+async.map(testUrls,
+
+  // 2nd param is the function that each item is passed to
+  singleWatsonRequest,
+
+  // 3rd param is the function to call when everything's done
+  function(err, results){
+    if (err) { console.log('An error occurred: ', err); }
+    // console.log('completing async map: ', results);
+    return results;
   }
-});
+);
 
-// { url: 'http://www.bbc.com/news/uk-politics-32810887',
-//   trends:
-//    [ 'European Union',
-//      'UK',
-//      'Prime Minister David Cameron',
-//      'Britain',
-//      'European Union',
-//      'UK',
-//      'Prime Minister David Cameron',
-//      'Britain' ] }
+// *********************************
+//  Trend Ranking
+// *********************************
 
 
 
+// TODO:  Add these trends to the article objects, not just the url.
+// pass this object off to the ranking algorithm to integrate with preexisting trends.
 
 // Now all articles have trends, articles complete.  Continue with trends:
+
+
+
+
+// Data handling priorities:
+// Collect trends for each article and amass a collection.
+
+// Determine how mutiple trends affects our schema / join table?
+// Formerly: Articles had one trend, a trend had many articles
+// Now:  Articles have many trends, a trend has many articles
+
+// Once we have multiple trends, we need to query our existing collection of trends and add these ones
+// The schema needs to be updated to reflect how many articles a trend has
+// The schema needs to be updated with an updated_at field for half-life calculation.
+
+// First: write a ranking algorithm that handles one trend record.
+
+// Consider:  revisit how to keep a history of ranks for each trend?
+
+
+
+
+
+
 
 // Ranking: custom algorithm
 // Each trend weighted by quantity of articles and degradation of half life since last update.

@@ -89,7 +89,9 @@
   },
   "homepage": "https://github.com/NCSkoglund/Tandem-Trends-Service#readme",
   "dependencies": {
-    "request": "^2.72.0"
+    "async": "^2.0.0-rc.6",
+    "request": "^2.72.0",
+    "underbar": "^0.1.0"
   }
 >>>>>>> Associate an array of keywords with an article
 }
