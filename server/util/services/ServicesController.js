@@ -8,7 +8,7 @@ module.exports = {
   },
 	// 2) Overall Favorabiltiy 
 	// ???
-	createOverallFavorability: function(textData) {
+	createTopicFavorability: function(textData) {
 
 	},
 	// 3) Emotion Graph
@@ -21,5 +21,5 @@ module.exports = {
 	// Watson ...
   createSiteFavorability: function(req, res) {
 
-  }
+  },
 }
