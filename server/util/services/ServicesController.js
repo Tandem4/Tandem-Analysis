@@ -1,4 +1,3 @@
-var Tone = require('../WatsonApi/ToneAnalyzer.js');
 var Alchemy = require('../services/AlchemyLanguageService.js');
 var config = require('../../../env/client-config');
 

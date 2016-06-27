@@ -8,36 +8,35 @@ var dummyURL = "http://www.telegraph.co.uk/sponsored/health/healthcare-innovatio
 module.exports = {
 	sendData: function(endpoint, rawData) {
 	var queryString = "?url=" + 
-	                 dummyURL + 
+        rawData.article_url + 
 	               "&apikey=" + 
 	      config.LANGUAGE_KEY + 
 	        "&outputMode=json";
-  console.log('++++++++++++++++++++');
-  console.log('expect to get rawdata from FetchData', rawData.article_url);
+
 		request(endpoint + queryString, function (error, response, body) {
 			if(error) {
 				console.log("error", error)
 			} else {
-				var filteredData = json.parse(body);
-				console.log('body:', body.docEmotions);
-   
-				// if ( body.docEmotions ) {
-    //       var emotionObject = {
-    //         anger: body.docEmotions['anger'] * 100,
-    //         disgust: body.docEmotions['disgust'] * 100,
-    //         fear: body.docEmotions['fear'] * 100,
-    //         joy: body.docEmotions['joy'] * 100,
-    //         sadness: body.docEmotions['sadness'] * 100,
-    //       }  
-    //       console.log('emotionObject', emotionObject);
-				// }
-				// if ( body.docSentiment ) {
-				// 	var sentimentObj = {
-				// 		score: body.docSentiment['score'] * 100,
-				// 		type: body.docSentiment['type']
-				// 	}
-		  //      //console.log('sentimentObject', emotionObject);
-				// }
+				var filteredData = JSON.parse(body);
+				if ( filteredData.docEmotions ) {
+          var emotionObj = {
+            anger: filteredData.docEmotions['anger'] * 100,
+            disgust: filteredData.docEmotions['disgust'] * 100,
+            fear: filteredData.docEmotions['fear'] * 100,
+            joy: filteredData.docEmotions['joy'] * 100,
+            sadness: filteredData.docEmotions['sadness'] * 100, 
+            _id: rawData._id
+          }  
+          console.log('emotionObject', emotionObj);
+				}
+				if ( filteredData.docSentiment ) {
+					var sentimentObj = {
+						score: filteredData.docSentiment['score'] * 100,
+						type: filteredData.docSentiment['type'],
+            _id: rawData._id
+					}
+		       console.log('sentimentObject', sentimentObj);
+				}
 		  }
 		});
 	}
