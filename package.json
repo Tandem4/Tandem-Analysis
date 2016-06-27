@@ -91,7 +91,8 @@
   "dependencies": {
     "async": "^2.0.0-rc.6",
     "request": "^2.72.0",
-    "underbar": "^0.1.0"
+    "tandem-db": "^1.0.6",
+    "underscore": "^1.8.3"
   }
 >>>>>>> Associate an array of keywords with an article
 }

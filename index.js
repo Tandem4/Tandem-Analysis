@@ -1,6 +1,7 @@
 const async = require('async');
 const request = require('request');
-const _ = require('underbar');
+const db = require('tandem-db');
+const _ = require('underscore');
 const API_KEY = process.env.TANDEM_API_KEY;
 const RELEVANCE = 0.5;
 
@@ -8,8 +9,9 @@ const RELEVANCE = 0.5;
 //  Fetch Records from Analysis Service
 // ************************************
 
-// 1) Decide how to interface with Analysis service and implement queue system
-//    assume this represents a batch of article urls
+// 1) Fetch records one at a time from Redis queue
+//    'Empty' edge case
+
 var testUrl1 = 'http://www.bbc.com/news/uk-politics-32810887';
 var testUrls = [
   'http://www.bbc.com/news/uk-politics-32810887',
@@ -40,10 +42,11 @@ var singleWatsonRequest = function(url, callback) {
 
     var parsedEntities = filterResults(JSON.parse(body), 'entities');
 
-    request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + API_KEY + '&url=' + testUrl1 + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
+    request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + API_KEY + '&url=' + url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
       if (err) { console.log('An error occurred: ', err); }
 
       var parsedConcepts = filterResults(JSON.parse(body), 'concepts');
+
       var trends = parsedEntities.concat(parsedConcepts);
       var article = {
         url: url,
@@ -69,64 +72,104 @@ async.map(testUrls,
     return results;
   }
 );
+// TODO:  Add these trends to the article objects, not just the url.
+// pass this object off to the ranking algorithm to integrate with preexisting trends.
 
 // *********************************
 //  Trend Ranking
 // *********************************
 
+// Step One: Input
+// Pass in the most recent article object as the argument to the ranking function.
+var updateTrends = function(article) {
+
+  // Identify the trends for this article.
+  var newTrends = article.trends;
+
+  // Step Two: Get Existing Trends
+  // Query the db for all trends, save to a collection (object?).
+  // (Am I doing multiple read/writes this way?  For each article? Can this be less expensive?  Can I use a hash table?)
+  db.Trends.fetch()
+  .then(function(allTrends) {
+
+    // a single trend:
+    console.log(allTrends.models[0].attributes);
+
+    // grab the names of all existing trends
+    var existingTrends = allTrends.models.map( function(model) {
+      return model.attributes.trend_name;
+    });
+
+    // Step Three: Update Trends Collection
+    // For each new trend:
+    for (var trend in newTrends) {
+
+      // Check and see if its name exists in the trends collection.
+      if (_.contains(existingTrends, trend)) {
+
+        // If it does, find that model in the allTrends collection
+        // update its updated_at and article_count fields
+        allTrends.findWhere( { 'trend_name': trend } )
+        .then( function(trendToUpdate) {
+          trendToUpdate.updated_at = Date.now();
+          trendToUpdate.article_count++;
+        });
+      } else {
+
+        // If it does not, add a new trend to this collection, setting article_count to 1, rank to null
+        allTrends.add({
+          trend_name: trend,
+          created_at: Date.now(),
+          updated_at: Date.now(),
+          rank: null,
+          article_count: 1
+        });
+      }
+    }
+
+    return allTrends;
+  });
+}
+
+// returns the updated collection of trends
+var updatedTrends = updateTrends({});
+
+// Step 4: Re-rank Each Trend
+//
+// Write a ranking algorithm that handles one trend record.
+// Once all trends for this article have been incorporated into the collection,
+// Re-calculate the 'rank' field for all trends in the collection.
+var rankTrend = function(trend) {
+  var trendCount = updatedTrends.length;
+
+  // - We need to know the number of trends total
+  // - Trend importance should be weighted by its updated_at date, and exhibit half-life decay
+  // - Trend importance should also be weighted by article count, but updated_at should have heavier weight
+
+  // Exponential Decay:  y = a(1 - r)^t
+  var a = trendCount; // initial amount, The number of trends
+  var r = 0.5;        // decay rate r = .5 (half life)
+  var t = (Date.now() - trend.updatedAt)/24;  //time (when t is 24hr, y is .5y) 24hr = 1 unit
+
+  // also
+  // y = originalAmount / 2^t, t being number of intervals
+
+  // first we want to sort by date
+  var rankBasedOnTime = a * Math.pow(1 - r, t);
+
+  // for every article, increment by a certain percentage
+  // the actual value of this will depend on what the ranks look like
+}
+
+// Each trend will be filtered through and have its rank field reassigned to an updated value.
+for (var trend in updatedTrends) {
+  rankTrend(trend);
+}
 
 
-// TODO:  Add these trends to the article objects, not just the url.
-// pass this object off to the ranking algorithm to integrate with preexisting trends.
-
-// Now all articles have trends, articles complete.  Continue with trends:
-
-
-
-
-// Data handling priorities:
-// Collect trends for each article and amass a collection.
-
-// Determine how mutiple trends affects our schema / join table?
-// Formerly: Articles had one trend, a trend had many articles
-// Now:  Articles have many trends, a trend has many articles
-
-// Once we have multiple trends, we need to query our existing collection of trends and add these ones
-// The schema needs to be updated to reflect how many articles a trend has
-// The schema needs to be updated with an updated_at field for half-life calculation.
-
-// First: write a ranking algorithm that handles one trend record.
-
-// Consider:  revisit how to keep a history of ranks for each trend?
-
-
-
-
-
-
-
-// Ranking: custom algorithm
-// Each trend weighted by quantity of articles and degradation of half life since last update.
-// Trends are identified by name, not id (if the same keyword comes up again in a new search)
-// How will similar trends be combined?
-// Pull out all existing trend data (cache?), add new trends and run through ranking algorithm
-  // - Best way to handle comparision with past data?
-  // - a cache(index), if it empties for some reason, it does a fetch, otherwise it just keeps adding/updating/pushing
-  // - Updates to schema:
-  // - Trends need to know about:  # of articles
-  // - Half life since last update (exponential decay of rank based on date current + date updated)
-  // Will it work for very large and for very small counts?
-  // Will it work for very fast rises and for very slow rises?
-  // Will it work in spite a cycles of typical human behavior?
-  // I needed to answer this question too.  But I looked to signal processing literature on the topic of trend removal.  The basic idea is that there is signal and noise.  The signal, in this case, is the trend and the noise is all the other stuff going on that you are trying to factor out.  There is a fairly simple algorithm in Random Data, Chapter 11.1.2, by Julias S Bendat and Allan G. Piersol.  It essentially computes a linear regression, where the dependent variable is your time series (Trend + Noise) values and the independent variable is the order of the time series values (n=1,2,3,4,5,6...N).  You have to decide how large your window of time is to evaluate upon (i.e. how many N records are you going to try to detect a trend among)
-  // Frequently, computation of ranking functions can be simplified by taking advantage of the observation that only the relative order of scores matters, not their absolute value; hence terms or factors that are independent of the document may be removed, and terms or factors that are independent of the query may be precomputed and stored with the document.
-
-// Insert new articles and updated/new trends into MySQL
-
-// HTTP server pulls out all trends and displays according to rank.
-
-
-// Attributions:
-// Provide a clickable hyperlink to www.alchemyapi.com with the text "Text Analysis by AlchemyAPI" within your website or application; and
-// Provide attribution to AlchemyAPI within any published works that are based on or mention AlchemyAPI, or content generated by AlchemyAPI, including but not limited to research papers and journal articles.
-// Provide attribution to AlchemyAPI within all web pages or documents where AlchemyAPI content and/or API results are used or displayed.
+// Step 5: Output: Update three tables.
+// At this point, we need to send our 1) updated trend collection and 2) new article back to MySQL.
+// Also: we need to make sure there's a record in the join table for each article-trend relationship added.
+db.Trends.set(updatedTrends);
+db.Articles.set(article);
+db.article_trend.set(); //? join table in bookshelf?
