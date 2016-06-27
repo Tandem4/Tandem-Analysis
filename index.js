@@ -12,16 +12,48 @@ const RELEVANCE = 0.5;
 // 1) Fetch records one at a time from Redis queue
 //    'Empty' edge case
 
-var testUrl1 = 'http://www.bbc.com/news/uk-politics-32810887';
-var testUrls = [
-  'http://www.bbc.com/news/uk-politics-32810887',
-  'https://www.washingtonpost.com/world/europe/britain-shocks-the-world-by-voting-to-leave-the-european-union/2016/06/24/3d100f4e-3998-11e6-af02-1df55f0c77ff_story.html',
-  'https://www.washingtonpost.com/news/the-fix/wp/2016/06/24/donald-trumps-brexit-press-conference-was-beyond-bizarre/?hpid=hp_hp-top-table-main_fix-trump-newser-1130a-top%3Ahomepage%2Fstory',
-  'http://www.bbc.com/sport/cricket/36626699'
-];
+// TODO:  load a few of these into the db with the seed file to work with initially
+var redisObject = {
+    emotionObject:  {
+      anger: 44.8812,
+      disgust: 39.0578,
+      fear: 60.339,
+      joy: 2.7489,
+      sadness: 10.0003,
+      _id: '576e0fcb1a97e5ae1d450a72'
+    },
+    sentimentObject: {
+      type: 'positive',
+      _id: '576e0fcb1a97e5ae1d450a72'
+    },
+    rawData: {
+      "pub_name": "telegraph",
+      "pub_url": "http://www.telegraph.co.uk",
+      "title": "Creating a healthier world",
+      "article_url": "http://www.bbc.com/sport/cricket/36626699",
+      "image_url": "http://www.telegraph.co.uk/content/dam/spark/Spark%20Distribution%20images/GSK-laborator-small.jpg",
+      "article_date": "2016-06-24T15:17:19-07:00",
+      "article_summary": "Creating a healthier world",
+      _id: '576e0fcb1a97e5ae1d450a72'
+    }
+  };
+
+// move nested properties into first-level properties and consolidate duplicates
+var consolidateObject = function(obj) {
+  var parentProps = ['rawData', 'emotionObject', 'sentimentObject'];
+
+  parentProps.forEach( function(parentProp) {
+    for (var prop in obj[parentProp]) {
+      obj[prop] = obj[parentProp][prop];
+    }
+    delete obj[parentProp];
+  });
+
+  return obj;
+};
 
 // *********************************
-//  Trend analysis
+//  Trend analysis per article
 // *********************************
 // Rate limit: 1000 API calls per day, 500 records max
 
@@ -35,141 +67,164 @@ var filterResults = function(results, prop) {
 };
 
 // Query Watson API for entities & concepts and attach to an article
-var singleWatsonRequest = function(url, callback) {
+var singleWatsonRequest = function(articleObj, callback) {
 
-  request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + API_KEY + '&url=' + url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
+  request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
     if (err) { console.log('An error occurred: ', err); }
 
     var parsedEntities = filterResults(JSON.parse(body), 'entities');
 
-    request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + API_KEY + '&url=' + url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
+    request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
       if (err) { console.log('An error occurred: ', err); }
 
       var parsedConcepts = filterResults(JSON.parse(body), 'concepts');
 
       var trends = parsedEntities.concat(parsedConcepts);
-      var article = {
-        url: url,
-        trends: _.uniq(trends)
-      };
 
-      callback(null, article);
+      articleObj.trends = _.uniq(trends)
+
+      // return articleObj;
+      callback(articleObj);
     });
   });
 };
 
+// For async batch processing:
 // Loop through the current batch of urls to append trends for each item
 // 1st para in async.each() is the array of items
-async.map(testUrls,
+// async.map(testUrls,
 
-  // 2nd param is the function that each item is passed to
-  singleWatsonRequest,
+//   // 2nd param is the function that each item is passed to
+//   singleWatsonRequest,
 
-  // 3rd param is the function to call when everything's done
-  function(err, results){
-    if (err) { console.log('An error occurred: ', err); }
-    // console.log('completing async map: ', results);
-    return results;
-  }
-);
-// TODO:  Add these trends to the article objects, not just the url.
-// pass this object off to the ranking algorithm to integrate with preexisting trends.
+//   // 3rd param is the function to call when everything's done
+//   function(err, results){
+//     if (err) { console.log('An error occurred: ', err); }
+//     // console.log('completing async map: ', results);
+//     return results;
+//   }
+// );
 
 // *********************************
-//  Trend Ranking
+//  Update Trends Table
 // *********************************
+// How to optimize for efficiency: Am I doing multiple read/writes this way?  For each article? Can this be less expensive?  Can I use a hash table/cache?
 
-// Step One: Input
-// Pass in the most recent article object as the argument to the ranking function.
-var updateTrends = function(article) {
+// // Fetch existing trends and incorporate new trends from the current article object
+var incorporateNewTrends = function(articleWithTrends) {
 
-  // Identify the trends for this article.
-  var newTrends = article.trends;
-
-  // Step Two: Get Existing Trends
-  // Query the db for all trends, save to a collection (object?).
-  // (Am I doing multiple read/writes this way?  For each article? Can this be less expensive?  Can I use a hash table?)
+//   // Query the db for all trends
   db.Trends.fetch()
   .then(function(allTrends) {
-
-    // a single trend:
-    console.log(allTrends.models[0].attributes);
 
     // grab the names of all existing trends
     var existingTrends = allTrends.models.map( function(model) {
       return model.attributes.trend_name;
     });
 
-    // Step Three: Update Trends Collection
+
+    // TODO:  async map instead of forEach? callback would be ranking algorithm
     // For each new trend:
-    for (var trend in newTrends) {
+    articleWithTrends.trends.forEach( function(trend) {
 
       // Check and see if its name exists in the trends collection.
       if (_.contains(existingTrends, trend)) {
 
-        // If it does, find that model in the allTrends collection
-        // update its updated_at and article_count fields
-        allTrends.findWhere( { 'trend_name': trend } )
-        .then( function(trendToUpdate) {
-          trendToUpdate.updated_at = Date.now();
-          trendToUpdate.article_count++;
+        // If it does, update its updated_at field
+        db.Trend.where({trend_name: trend}).save(null, {patch: true})
+        .then(function () {
+          console.log('Updated trend: ', trend);
+        }).catch( function(err) {
+          console.log('There was an error: ', err);
         });
-      } else {
 
-        // If it does not, add a new trend to this collection, setting article_count to 1, rank to null
-        allTrends.add({
-          trend_name: trend,
-          created_at: Date.now(),
-          updated_at: Date.now(),
-          rank: null,
-          article_count: 1
+      // if it's a brand new trend, create a new Trend record
+      } else {
+        db.Trend.forge({ 'trend_name': trend }).save()
+        .then( function() {
+          console.log('New trend added: ', trend);
+        }).catch( function(err) {
+          console.log('There was an error: ', err);
         });
       }
-    }
 
-    return allTrends;
+    });
   });
 }
 
-// returns the updated collection of trends
-var updatedTrends = updateTrends({});
+// *********************************
+//  Trend Ranking
+// *********************************
 
-// Step 4: Re-rank Each Trend
-//
-// Write a ranking algorithm that handles one trend record.
-// Once all trends for this article have been incorporated into the collection,
-// Re-calculate the 'rank' field for all trends in the collection.
-var rankTrend = function(trend) {
-  var trendCount = updatedTrends.length;
+var rankSingleTrend = function(trend) {
 
-  // - We need to know the number of trends total
-  // - Trend importance should be weighted by its updated_at date, and exhibit half-life decay
-  // - Trend importance should also be weighted by article count, but updated_at should have heavier weight
+};
+// // Step 4: Re-rank Each Trend
+// //
+// // Write a ranking algorithm that handles one trend record.
+// // Once all trends for this article have been incorporated into the collection,
+// // Re-calculate the 'rank' field for all trends in the collection.
+// var rankTrend = function(trend) {
+//   var trendCount = updatedTrends.length;
 
-  // Exponential Decay:  y = a(1 - r)^t
-  var a = trendCount; // initial amount, The number of trends
-  var r = 0.5;        // decay rate r = .5 (half life)
-  var t = (Date.now() - trend.updatedAt)/24;  //time (when t is 24hr, y is .5y) 24hr = 1 unit
+//   // - We need to know the number of trends total
+//   // - Trend importance should be weighted by its updated_at date, and exhibit half-life decay
+//   // - Trend importance should also be weighted by article count, but updated_at should have heavier weight
 
-  // also
-  // y = originalAmount / 2^t, t being number of intervals
+//   // Exponential Decay:  y = a(1 - r)^t
+//   var a = trendCount; // initial amount, The number of trends
+//   var r = 0.5;        // decay rate r = .5 (half life)
+//   var t = (Date.now() - trend.updatedAt)/24;  //time (when t is 24hr, y is .5y) 24hr = 1 unit
 
-  // first we want to sort by date
-  var rankBasedOnTime = a * Math.pow(1 - r, t);
+//   // also
+//   // y = originalAmount / 2^t, t being number of intervals
 
-  // for every article, increment by a certain percentage
-  // the actual value of this will depend on what the ranks look like
-}
+//   // first we want to sort by date
+//   var rankBasedOnTime = a * Math.pow(1 - r, t);
 
-// Each trend will be filtered through and have its rank field reassigned to an updated value.
-for (var trend in updatedTrends) {
-  rankTrend(trend);
-}
+//   // for every article, increment by a certain percentage
+//   // the actual value of this will depend on what the ranks look like
+// }
+
+// // Each trend will be filtered through and have its rank field reassigned to an updated value.
+// for (var trend in updatedTrends) {
+//   rankTrend(trend);
+// }
 
 
-// Step 5: Output: Update three tables.
-// At this point, we need to send our 1) updated trend collection and 2) new article back to MySQL.
-// Also: we need to make sure there's a record in the join table for each article-trend relationship added.
-db.Trends.set(updatedTrends);
-db.Articles.set(article);
-db.article_trend.set(); //? join table in bookshelf?
+// // Step 5: Output: Update three tables.
+// // At this point, we need to send our 1) updated trend collection and 2) new article back to MySQL.
+// // Also: we need to make sure there's a record in the join table for each article-trend relationship added.
+// db.Trends.set(updatedTrends);
+// db.Articles.set(article);
+// db.article_trend.set(); //? join table in bookshelf?
+
+// 1)
+// prepare the current article for trend analysis:
+var articleToProcess = consolidateObject(redisObject);
+console.log('articleToProcess: ', articleToProcess);
+
+// 2)
+// append watson-identified trends to the current article:
+singleWatsonRequest(articleToProcess, function(articleWithTrends){
+  console.log('articleWithTrends: ', articleWithTrends);
+
+  // 3)
+  // add new or update preexisting trend records:
+  incorporateNewTrends(articleWithTrends, function() {
+    console.log('this is a callback');
+  });
+
+  // may need to use async map with a callback here.
+
+
+
+
+});
+
+
+
+// close the database connection when finished
+// }).finally( function() {
+//   // db.bookshelf.knex.destroy();
+// });
