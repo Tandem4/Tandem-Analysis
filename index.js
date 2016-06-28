@@ -111,9 +111,12 @@ var singleWatsonRequest = function(articleObj, callback) {
 // How to optimize for efficiency: Am I doing multiple read/writes this way?  For each article? Can this be less expensive?  Can I use a hash table/cache?
 
 // // Fetch existing trends and incorporate new trends from the current article object
-var incorporateNewTrends = function(articleWithTrends) {
+var incorporateNewTrends = function(articleWithTrends, callback) {
 
-//   // Query the db for all trends
+  // prevent dateTime from being slightly different with each callback
+  var currentTime = Date.now();
+
+  // Query the db for all trends
   db.Trends.fetch()
   .then(function(allTrends) {
 
@@ -130,10 +133,14 @@ var incorporateNewTrends = function(articleWithTrends) {
       // Check and see if its name exists in the trends collection.
       if (_.contains(existingTrends, trend)) {
 
-        // If it does, update its updated_at field
         db.Trend.where({trend_name: trend}).save(null, {patch: true})
         .then(function () {
-          console.log('Updated trend: ', trend);
+
+          // go fetch the thing we just updated
+          db.Trend.where({trend_name: trend}).fetch()
+          .then( function(theUpdatedTrend) {
+            callback(theUpdatedTrend, currentTime);
+          })
         }).catch( function(err) {
           console.log('There was an error: ', err);
         });
@@ -141,8 +148,9 @@ var incorporateNewTrends = function(articleWithTrends) {
       // if it's a brand new trend, create a new Trend record
       } else {
         db.Trend.forge({ 'trend_name': trend }).save()
-        .then( function() {
-          console.log('New trend added: ', trend);
+        .then( function(trend) {
+          console.log('New trend added: ', trend.attributes);
+          callback(trend, currentTime);
         }).catch( function(err) {
           console.log('There was an error: ', err);
         });
@@ -152,45 +160,35 @@ var incorporateNewTrends = function(articleWithTrends) {
   });
 }
 
+
+// TODO: this doesn't hit all trend records, it is dictated by incorporateNewTrends content
 // *********************************
 //  Trend Ranking
 // *********************************
+//  Exponential Decay:  y = a(1 - r)^t
+//  rank = initialAmount * Math.pow(1 - decayRate, timePassed);
 
-var rankSingleTrend = function(trend) {
+var rankSingleTrend = function(trend, currentTime) {
 
+  db.Trends.count().then( function(trendCount) {
+
+    // use 24hrs as our time unit
+    var ms = currentTime - Date.parse(trend.get("updated_at"));
+    var s = ms / 1000;
+    var min = s / 60;
+    var h = min / 60;
+
+    // TODO: this needs to be a float, is rounding
+    var rank = trendCount * Math.pow(1 - 0.5, h);
+
+    db.Trend.where({_id: trend.attributes._id}).save({rank: rank}, {patch: true})
+    .then(function (trend) {
+      console.log('Updated rand for trend: ', trend.attributes);
+    }).catch( function(err) {
+      console.log('There was an error: ', err);
+    });
+  });
 };
-// // Step 4: Re-rank Each Trend
-// //
-// // Write a ranking algorithm that handles one trend record.
-// // Once all trends for this article have been incorporated into the collection,
-// // Re-calculate the 'rank' field for all trends in the collection.
-// var rankTrend = function(trend) {
-//   var trendCount = updatedTrends.length;
-
-//   // - We need to know the number of trends total
-//   // - Trend importance should be weighted by its updated_at date, and exhibit half-life decay
-//   // - Trend importance should also be weighted by article count, but updated_at should have heavier weight
-
-//   // Exponential Decay:  y = a(1 - r)^t
-//   var a = trendCount; // initial amount, The number of trends
-//   var r = 0.5;        // decay rate r = .5 (half life)
-//   var t = (Date.now() - trend.updatedAt)/24;  //time (when t is 24hr, y is .5y) 24hr = 1 unit
-
-//   // also
-//   // y = originalAmount / 2^t, t being number of intervals
-
-//   // first we want to sort by date
-//   var rankBasedOnTime = a * Math.pow(1 - r, t);
-
-//   // for every article, increment by a certain percentage
-//   // the actual value of this will depend on what the ranks look like
-// }
-
-// // Each trend will be filtered through and have its rank field reassigned to an updated value.
-// for (var trend in updatedTrends) {
-//   rankTrend(trend);
-// }
-
 
 // // Step 5: Output: Update three tables.
 // // At this point, we need to send our 1) updated trend collection and 2) new article back to MySQL.
@@ -211,13 +209,9 @@ singleWatsonRequest(articleToProcess, function(articleWithTrends){
 
   // 3)
   // add new or update preexisting trend records:
-  incorporateNewTrends(articleWithTrends, function() {
-    console.log('this is a callback');
-  });
+  incorporateNewTrends(articleWithTrends, rankSingleTrend);
 
   // may need to use async map with a callback here.
-
-
 
 
 });
