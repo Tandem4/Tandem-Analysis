@@ -9,24 +9,22 @@ const RELEVANCE = 0.5;
 //  Fetch Records from Analysis Service
 // ************************************
 
-// 1) Fetch records one at a time from Redis queue
-//    'Empty' edge case
-
-// TODO:  load a few of these into the db with the seed file to work with initially
-var redisObject = {
-    emotionObject:  {
+// 1) Receive records in batches from Analysis service
+var articleBatch = [
+  {
+    // emotionObject:  {
       anger: 44.8812,
       disgust: 39.0578,
       fear: 60.339,
       joy: 2.7489,
       sadness: 10.0003,
-      _id: '576e0fcb1a97e5ae1d450a72'
-    },
-    sentimentObject: {
+      _id: '576e0fcb1a97e5ae1d450a72',
+    // },
+    // sentimentObject: {
       type: 'positive',
-      _id: '576e0fcb1a97e5ae1d450a72'
-    },
-    rawData: {
+      // _id: '576e0fcb1a97e5ae1d450a72'
+    // },
+    // rawData: {
       "pub_name": "telegraph",
       "pub_url": "http://www.telegraph.co.uk",
       "title": "Creating a healthier world",
@@ -34,23 +32,34 @@ var redisObject = {
       "image_url": "http://www.telegraph.co.uk/content/dam/spark/Spark%20Distribution%20images/GSK-laborator-small.jpg",
       "article_date": "2016-06-24T15:17:19-07:00",
       "article_summary": "Creating a healthier world",
-      _id: '576e0fcb1a97e5ae1d450a72'
-    }
-  };
-
-// move nested properties into first-level properties and consolidate duplicates
-var consolidateObject = function(obj) {
-  var parentProps = ['rawData', 'emotionObject', 'sentimentObject'];
-
-  parentProps.forEach( function(parentProp) {
-    for (var prop in obj[parentProp]) {
-      obj[prop] = obj[parentProp][prop];
-    }
-    delete obj[parentProp];
-  });
-
-  return obj;
-};
+      // _id: '576e0fcb1a97e5ae1d450a72'
+    // }
+  },
+  {
+    // emotionObject:  {
+      anger: 29.8812,
+      disgust: 44.0578,
+      fear: 40.339,
+      joy: 29.7489,
+      sadness: 21.0003,
+      _id: '576e0fcb1a97e5ae1d450a99',
+    // },
+    // sentimentObject: {
+      type: 'negative',
+    //   _id: '576e0fcb1a97e5ae1d450a72'
+    // },
+    // rawData: {
+      "pub_name": "telegraph",
+      "pub_url": "http://www.telegraph.co.uk",
+      "title": "Destroying a healthier world",
+      "article_url": "http://www.bbc.com/news/uk-politics-32810887",
+      "image_url": "http://www.telegraph.co.uk/content/dam/spark/Spark%20Distribution%20images/GSK-laborator-small.jpg",
+      "article_date": "2016-05-24T15:17:19-07:00",
+      "article_summary": "Destroying a healthier world",
+    //   _id: '576e0fcb1a97e5ae1d450a72'
+    // }
+  }
+];
 
 // *********************************
 //  Trend analysis per article
@@ -67,15 +76,15 @@ var filterResults = function(results, prop) {
 };
 
 // Query Watson API for entities & concepts and attach to an article
-var singleWatsonRequest = function(articleObj, callback) {
-
+var singleWatsonRequest = function(articleObj, doneCallback) {
+  console.log('calling singleWatsonRequest with ', articleObj.title);
   request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
-    if (err) { console.log('An error occurred: ', err); }
+    if (err) { console.log('An error occurred in singleWatsonRequest: ', err); }
 
     var parsedEntities = filterResults(JSON.parse(body), 'entities');
 
     request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
-      if (err) { console.log('An error occurred: ', err); }
+      if (err) { console.log('An error occurred in singleWatsonRequest: ', err); }
 
       var parsedConcepts = filterResults(JSON.parse(body), 'concepts');
 
@@ -83,82 +92,107 @@ var singleWatsonRequest = function(articleObj, callback) {
 
       articleObj.trends = _.uniq(trends)
 
-      // return articleObj;
-      callback(articleObj);
+      doneCallback(null, articleObj);
     });
   });
 };
 
 // For async batch processing:
-// Loop through the current batch of urls to append trends for each item
-// 1st para in async.each() is the array of items
-// async.map(testUrls,
+// Loop through the current batch of articles to append trends for each one
+var collectWatsonTrends = function(batch, callback) {
 
-//   // 2nd param is the function that each item is passed to
-//   singleWatsonRequest,
+  // 1st para in async.each() is the array of items
+  async.map(batch,
 
-//   // 3rd param is the function to call when everything's done
-//   function(err, results){
-//     if (err) { console.log('An error occurred: ', err); }
-//     // console.log('completing async map: ', results);
-//     return results;
-//   }
-// );
+    // 2nd param is the function that each item is passed to
+    singleWatsonRequest,
+
+    // 3rd param is the function to call when everything's done
+    function(err, results){
+      if (err) { console.log('An error occurred in collectWatsonTrends: ', err); }
+      callback(results);
+    }
+  );
+};
 
 // *********************************
 //  Update Trends Table
 // *********************************
 // How to optimize for efficiency: Am I doing multiple read/writes this way?  For each article? Can this be less expensive?  Can I use a hash table/cache?
 
-// // Fetch existing trends and incorporate new trends from the current article object
-var incorporateNewTrends = function(articleWithTrends, callback) {
+// Write a new trend record to the db
+var createSingleTrend = function(newTrend, doneCallback) {
+  db.Trend.forge({ 'trend_name': newTrend }).save()
+  .then( function(trend) {
+    console.log('Created: ', trend.attributes);
+    doneCallback(null, true);
+  }).catch( function(err) {
+    console.log('There was an error in createSingleTrend: ', err);
+  });
+};
 
-  // prevent dateTime from being slightly different with each callback
-  var currentTime = Date.now();
+// Update the updated_at field of an existing trend record
+var updateSingleTrend = function(existingTrend, doneCallback) {
+  db.Trend.where({trend_name: existingTrend}).save(null, {patch: true})
+  .then( function(trend) {
+    console.log('Updated: ', trend.attributes);
+    doneCallback(null, true);
+  }).catch( function(err) {
+    console.log('There was an error in updateSingleTrend: ', err);
+  });
+};
 
-  // Query the db for all trends
-  db.Trends.fetch()
-  .then(function(allTrends) {
+// Given a batch of articles with Trends that need to be added or updated
+var incorporateAllNewTrends = function (articlesWithTrends) {
 
-    // grab the names of all existing trends
+  // Each of these will need access to the existing trends in the database
+  // Make a call here once to share
+  db.Trends.fetch().then(function(allTrends) {
+
+    // save the names of all existing trends into an array
     var existingTrends = allTrends.models.map( function(model) {
       return model.attributes.trend_name;
     });
 
+    // For every article in articlesWithTrends
+    async.each( articlesWithTrends,
 
-    // TODO:  async map instead of forEach? callback would be ranking algorithm
-    // For each new trend:
-    articleWithTrends.trends.forEach( function(trend) {
+      // 2nd param is the function that each item is passed to (second parameter?)
+      function(article, callback) {
+        console.log('beginning asyncMap in incorporateAllNewTrends with: ', article)
 
-      // Check and see if its name exists in the trends collection.
-      if (_.contains(existingTrends, trend)) {
+        // for every trend belonging to this article
+        async.each( article.trends,
 
-        db.Trend.where({trend_name: trend}).save(null, {patch: true})
-        .then(function () {
+          // either add or update a trend record in the db
+          function(singleTrend, callback) {
+            if (_.contains(existingTrends, singleTrend)) {
+              updateSingleTrend(singleTrend, callback);
+            } else {
+              createSingleTrend(singleTrend, callback);
+            }
+          },
 
-          // go fetch the thing we just updated
-          db.Trend.where({trend_name: trend}).fetch()
-          .then( function(theUpdatedTrend) {
-            callback(theUpdatedTrend, currentTime);
-          })
-        }).catch( function(err) {
-          console.log('There was an error: ', err);
-        });
+          function(err) {
+            if (err) { console.log('An error occurred in incorporateAllNewTrends: ', err); }
+            console.log('completing async.map in incorporateAllNewTrends.');
+            callback();
+          }
+        );
+      },
 
-      // if it's a brand new trend, create a new Trend record
-      } else {
-        db.Trend.forge({ 'trend_name': trend }).save()
-        .then( function(trend) {
-          console.log('New trend added: ', trend.attributes);
-          callback(trend, currentTime);
-        }).catch( function(err) {
-          console.log('There was an error: ', err);
-        });
+      // 3rd param is the function to call when everything's done
+      function(err){
+        if (err) { console.log('There was an error: ', err); }
+        console.log('we made it to the end of incorporateAllNewTrends.');
+        // Grab all Trends, rank each one
+        // rankSingleTrend(eachTrendInCollection)
+        // this should catch the ones that are getting missed
       }
-
-    });
+    );
   });
-}
+};
+
 
 
 // TODO: this doesn't hit all trend records, it is dictated by incorporateNewTrends content
@@ -199,22 +233,31 @@ var rankSingleTrend = function(trend, currentTime) {
 
 // 1)
 // prepare the current article for trend analysis:
-var articleToProcess = consolidateObject(redisObject);
-console.log('articleToProcess: ', articleToProcess);
+// var articleToProcess = consolidateObject(redisObject);
+// console.log('articleToProcess: ', articleToProcess);
 
 // 2)
 // append watson-identified trends to the current article:
-singleWatsonRequest(articleToProcess, function(articleWithTrends){
-  console.log('articleWithTrends: ', articleWithTrends);
+// singleWatsonRequest(articleToProcess, function(articleWithTrends){
 
-  // 3)
-  // add new or update preexisting trend records:
-  incorporateNewTrends(articleWithTrends, rankSingleTrend);
+// TODO: wrap this into module.exports
 
-  // may need to use async map with a callback here.
+// Given a batch of articles to process,
+// Append a collection of trends to each article
+collectWatsonTrends(articleBatch, function(articlesWithTrends) {
+  console.log('articlesWithTrends: ', articlesWithTrends);
+
+  // Then for each article in that collection
+  // run through its newly collected trends, and either add or update the trend table
+  incorporateAllNewTrends(articlesWithTrends, function(results) {
+    console.log('completing incorporateAllNewTrends, ', results);
+  });
 
 
+//rankSingleTrend
 });
+
+
 
 
 
