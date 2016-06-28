@@ -13,7 +13,7 @@ var assert = require('assert');
 var ObjectId = require('mongodb').ObjectID;
 var async = require('async');
 
-//var Alchemy = require('../services/AlchemyLanguageServices')
+var Alchemy = require('../services/AlchemyLanguageService')
 
 
 var article_urls = [];
@@ -35,6 +35,9 @@ module.exports = function() {
       var rawDataArr = item;
       // console.log('returns an array', rawDataArr)
       // rawDataArr.forEach(Alchemy.sendData(data));
+      async.each(rawDataArr, Alchemy.sendData, function (err, results) { 
+        console.log('final results: ', results); 
+      });
     })
     .catch(function(err) {
       console.log("An error occured in Mongo", err);
