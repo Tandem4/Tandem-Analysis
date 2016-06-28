@@ -1,52 +1,46 @@
 var ServicesController = require('../services/ServicesController');
 var config = require('../../../env/client-config');
 
-var dummyData = require('../data/dummyData');
-var dummyData2 = require('../data/dummyData2');
+// var dummyData = require('../data/dummyData');
+// var dummyData2 = require('../data/dummyData2');
 
+var Promise = require('bluebird');
 var mongodb = require('mongodb');
+var mongo = require('mongodb-bluebird');
 var MongoClient = mongodb.MongoClient;
+var Collection = mongodb.Collection;
 var assert = require('assert');
 var ObjectId = require('mongodb').ObjectID;
-//var FindNews = require('./FindNews');
+var async = require('async');
 
-var findNews = function(db, callback) {
-  var news = db.collection('news').find();
-  news.each(function(err, rawdata) {
-    assert.equal(err, null);
-    if (err) {
-      console.log('An error occured at findNews', err);
-    }
-    if ( rawdata !== null ) {
-      callback(rawdata);
-    } 
-  });
-}
+//var Alchemy = require('../services/AlchemyLanguageServices')
 
 
-module.exports = function(){
+var article_urls = [];
+
+
+module.exports = function() {
 
   // test with dummy data
   // var rawdata = dummyData;
   // ServicesController.createSentiment(rawdata);
   // ServicesController.createEmotion(rawdata);
   
+  // var rawDataArr = [];
 
-  MongoClient.connect(config.MONGO_URL, function(err, db) {
-    assert.equal(null, err);
-    if (err) {
-      console.log('An error occured on MongoClient connection', err);
-    } else {
-      findNews(db, function(rawdata){
-        //console.log('our raw data url', rawdata.article_url);
-        ServicesController.createSentiment(rawdata);
-        ServicesController.createEmotion(rawdata);
-
-        db.close();
-      })
-      
-    }
-  })
+  mongo.connect(config.MONGO_URL).then(function(db) {
+    var news = db.collection('news');
+    return news.find()
+    .then(function(item) {
+      var rawDataArr = item;
+      // console.log('returns an array', rawDataArr)
+      // rawDataArr.forEach(Alchemy.sendData(data));
+    })
+    .catch(function(err) {
+      console.log("An error occured in Mongo", err);
+    });
+  });
 
 }
+
 
