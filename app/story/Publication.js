@@ -45,7 +45,6 @@ class Publication extends Component {
 		          thumbTintColor = '#ffffff'
 		          disabled = { true }
 		          value={this.props.moodScore} />
-
           </View>
 	      </View>
 

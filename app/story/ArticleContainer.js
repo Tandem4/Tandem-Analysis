@@ -13,6 +13,7 @@ import Slant from './Slant';
 
 const ArticleContainer = (article) => {
   return (
+
     <View style={styles.card} >
       <Publication
         publication={article.article_date}
