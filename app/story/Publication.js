@@ -18,8 +18,6 @@ class Publication extends Component {
 
         {/* First Row => Pub & Graph Info */}
 		    <View style={styles.firstRow}>
-
-		      {/* Publication */}
 			    <View style={styles.publication}>
 			      <Text style={styles.publicationText}>
 			        <Icon name="md-paper" size={17} color="#ffffff"></Icon>
@@ -67,6 +65,7 @@ class Publication extends Component {
 
 		      </TouchableOpacity>
 	      </View>
+
 	    </View>
 		)
 	}
