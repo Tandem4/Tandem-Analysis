@@ -35,8 +35,6 @@ class Publication extends Component {
 					{/* MoodScore Graph  */}
 		      <View style={styles.moodScore}>
 		        <Sldr
-		          track = {{backgroundColor: '#fffff', height: 2}}
-		          thumb = {{width: 5, height: 5}}
 		          minimumValue = {0}
 		          maximumValue = {40}
 		          minimumTrackTintColor = '#ffffff'

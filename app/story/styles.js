@@ -16,10 +16,10 @@ let styles = StyleSheet.create({
     borderTopLeftRadius: 5,
     borderTopRightRadius: 5,
     shadowColor: '#000000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 5,
     shadowOffset: {
-      heigth: 1,
+      height: 1,
       width: 0
     }
   },
@@ -47,10 +47,10 @@ let styles = StyleSheet.create({
     borderBottomLeftRadius: 5,
     borderBottomRightRadius: 5,
     shadowColor: '#000000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 5,
     shadowOffset: {
-      heigth: 1,
+      height: 4,
       width: 0
     }
   },
