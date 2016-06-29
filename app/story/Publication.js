@@ -1,9 +1,6 @@
 import React, { Component, PropTypes, Linking} from 'react';
-import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
-import Sldr from 'react-native-slider';
-
-import styles from './styles.js';
-import Slant from './Slant';
+import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight } from 'react-native';
+import styles from '../assets/styles.js';
 
 let staticURL = 'https://www.facebook.com';
 
@@ -42,7 +39,7 @@ class Publication extends Component {
 		          thumbTintColor = '#ffffff'
 		          disabled = { true }
 		          value={this.props.moodScore} />
-	          
+
           </View>
 
 	      </View>

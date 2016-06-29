@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight } from 'react-native';
-import styles from './styles.js';
+import styles from '../assets/styles.js';
 
 import Publication from './Publication';
 import Slant from './Slant';
@@ -11,13 +11,13 @@ import Slant from './Slant';
 // let URL = 'https://www.google.com'
 
 
-const ArticleContainer = (article) => { 
+const ArticleContainer = (article) => {
   return (
-    <View>
-      <Publication 
-        publication={article.publication} 
-        headline={article.headline}  
-        moodScore = {article.moodScore} />
+    <View style={styles.card} >
+      <Publication
+        publication={article.publication}
+        headline={article.headline}  />
+      <Slant mood={article.moodScore} />
     </View>
   );
 }

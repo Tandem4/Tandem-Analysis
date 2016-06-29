@@ -1,25 +1,33 @@
-import React, { Component } from 'react';
-import { Navigator, Image } from 'react-native';
+import React, { Component, TouchableHighlight } from 'react';
+import { Navigator, Image, View, Text } from 'react-native';
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 import { Provider } from 'react-redux';
 
-import Story from './story/Story';
 import store from './store';
+import Trend from './trend/Trend';
+import Story from './story/Story';
 
 class App extends Component {
 	render() {
 		return (
       <Provider store={store}>
         <Navigator
-          initialRoute={{name: 'List', component: Story}}
+          initialRoute={{name: 'Trend', component: Trend}}
           configureScene={() => ({
           	...Navigator.SceneConfigs.VerticalDownSwipeJump,
           	gestures: {},
           })}
           renderScene={(route, navigator) => {
-          	if (route.component) {
-          		return React.createElement(route.component, { navigator, ...route.passProps });
-          	}
+              if(route.name == 'Trend') {
+                return <Trend navigator={navigator} {...route.passProps}  />
+              }
+              if(route.name == 'Story') {
+                return <Story navigator={navigator} {...route.passProps}  />
+              }
+
+          	// if (route.component) {
+          	// 	return React.createElement(route.component, { navigator, ...route.passProps });
+          	// }
           }}
         />
       </Provider>

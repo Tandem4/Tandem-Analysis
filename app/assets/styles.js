@@ -69,6 +69,28 @@ let styles = StyleSheet.create({
     borderRadius: 5,
     height: 4,
     backgroundColor: '#ffffff'
+    marginRight: 5,
+    backgroundColor: '#f55443',
+  },
+
+  trendRow: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+    padding: 10
+  },
+  title: {
+    fontSize: 36,
+    padding: 20
+  },
+  date: {
+    flex: 1,
+    textAlign: 'center',
+    paddingBottom: 20
+  },
+  scroll: {
+    flex: 1
   }
 });
 

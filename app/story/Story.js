@@ -23,7 +23,7 @@ class Story extends Component {
 	          renderRow = {ArticleContainer}
 	        />
         </ScrollView>
-      </View>		
+      </View>
     )
 	}
 }
