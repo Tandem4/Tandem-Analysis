@@ -1,17 +1,37 @@
 import { Animated, StyleSheet, View, Text, Dimensions } from 'react-native';
 
 let styles = StyleSheet.create({
+  body: {
+    backgroundColor: '#eaedf1',
+    flex: 1,
+  },
   card: {
     flexDirection: 'row',
-    padding: 10,
-    marginLeft: 10,
-    marginRight: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#CCCCCC',
-    backgroundColor: '#f4f4f4'
+    paddingLeft: 25,
+    paddingRight: 25,
+    paddingTop: 15,
+    paddingBottom: 15,
+    marginLeft: 15,
+    marginRight: 15,
+    borderBottomWidth: 4,
+    borderBottomColor: '#eaedf1',
+    backgroundColor: '#ffffff'
   },
   publication: {
-    fontSize: 11
+    flexDirection: 'row',
+    paddingLeft: 25,
+    paddingRight: 25,
+    paddingTop: 10,
+    paddingBottom: 10,
+    marginLeft: 15,
+    marginRight: 15,
+    backgroundColor: '#323a45'
+  },
+  publicationText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    color: '#ffffff'
   },
   headline: {
     flexWrap: 'wrap',
@@ -24,7 +44,7 @@ let styles = StyleSheet.create({
     flexDirection: 'column'
   },
   firstRow: {
-    flex: 5
+    flex: 4
   },
   bar: {
     alignSelf: 'flex-end',
@@ -32,7 +52,7 @@ let styles = StyleSheet.create({
     height: 4,
     marginRight: 5,
     backgroundColor: '#f55443',
-  }
+  },
 });
 
 export default styles;

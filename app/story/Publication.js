@@ -10,9 +10,17 @@ class Publication extends Component {
 	}
 	render() {
 		return (
-	    <View style={styles.firstRow}>
-	      <Text style={styles.publication}>{this.props.publication}</Text>
-	      <Text style={styles.headline}>{this.props.headline}</Text>
+	    <View>
+		    <View style={styles.publication}>
+		      <Text style={styles.publicationText}>
+		        {this.props.publication.toUpperCase()}
+		      </Text>
+	      </View>
+	      <View>
+		      <Text style={styles.card}>
+		        {this.props.headline}
+		      </Text>
+	      </View>
 	    </View>
 		)
 	}

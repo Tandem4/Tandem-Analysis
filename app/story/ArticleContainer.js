@@ -13,7 +13,7 @@ import Slant from './Slant';
 
 const ArticleContainer = (article) => { 
   return (
-    <View style={styles.card} >
+    <View>
       <Publication 
         publication={article.publication} 
         headline={article.headline}  />
