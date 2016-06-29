@@ -1,5 +1,7 @@
 import React, { Component, PropTypes, Linking} from 'react';
 import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
+import Sldr from 'react-native-slider';
+
 import styles from './styles.js';
 import Slant from './Slant';
 
@@ -32,9 +34,14 @@ class Publication extends Component {
 
 					{/* MoodScore Graph  */}
 		      <View style={styles.moodScore}>
-		        <Slider 
+		        <Sldr
+		          track = {{backgroundColor: '#fffff', height: 2}}
+		          thumb = {{width: 5, height: 5}}
 		          minimumValue = {0}
 		          maximumValue = {40}
+		          minimumTrackTintColor = '#ffffff'
+		          maximumTrackTintColor = '#ffffff'
+		          thumbTintColor = '#ffffff'
 		          disabled = { true }
 		          value={this.props.moodScore} />
 	          
