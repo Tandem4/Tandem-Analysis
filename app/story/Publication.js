@@ -13,11 +13,11 @@ class Publication extends Component {
 	    <View>
 		    <View style={styles.publication}>
 		      <Text style={styles.publicationText}>
-}
+		        {this.props.publication}
 		      </Text>
 	      </View>
-	      <View>
-		      <Text style={styles.card}>
+	      <View style={styles.headline}>
+		      <Text style={styles.headlineText}>
 		        {this.props.headline}
 		      </Text>
 	      </View>
