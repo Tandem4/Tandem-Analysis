@@ -1,6 +1,6 @@
-import React, { Component, PropTypes, TouchableHightlight } from 'react';
+import React, { Component, PropTypes, TouchableHighlight } from 'react';
 import { bindActionCreators } from 'redux';
-import { View, ScorllView, Text, ListView } from 'react-native';
+import { View, ScrollView, Text, ListView } from 'react-native';
 import { connect } from 'react-redux';
 
 import articlesData from '../data/articlesData';

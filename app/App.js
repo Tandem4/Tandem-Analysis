@@ -12,7 +12,7 @@ class App extends Component {
       <Provider store={store}>
         <Navigator
           initialRoute={{name: 'List', component: Story}}
-          configuerScene={() => ({
+          configureScene={() => ({
           	...Navigator.SceneConfigs.VerticalDownSwipeJump,
           	gestures: {},
           })}
