@@ -1,5 +1,5 @@
 import React, { Component, PropTypes, Linking} from 'react';
-import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight } from 'react-native';
+import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
 import styles from './styles.js';
 import Slant from './Slant';
 
@@ -13,23 +13,42 @@ class Publication extends Component {
 		return (
 	    <View>
 
+        {/* First Row => Pub & Graph Info */}
 		    <View style={styles.firstRow}>
+
+		      {/* Publication */}
 			    <View style={styles.publication}>
 			      <Text style={styles.publicationText}>
 			        {this.props.publication}
 			      </Text>
 		      </View>
+
+					{/* MoodScore Score #  */}
+		      <View>
+		        <Text style={styles.publicationText}>
+		          {this.props.moodScore}
+		        </Text>
+		      </View>
+
+					{/* MoodScore Graph  */}
 		      <View style={styles.moodScore}>
-	          <Slant mood={this.props.moodScore} />
+		        <Slider 
+		          minimumValue = {0}
+		          maximumValue = {40}
+		          disabled = { true }
+		          value={this.props.moodScore} />
+	          
           </View>
+
 	      </View>
 
+				{/* Second Row => Headline Text */}
 	      <View style={styles.headline}>
 		      <Text style={styles.headlineText}>
 		        {this.props.headline}
 		      </Text>
 	      </View>
-	      
+
 	    </View>
 		)
 	}

@@ -63,14 +63,15 @@ let styles = StyleSheet.create({
     fontSize: 18
   },
   moodScore: {
-    flex: 1
+    flex: 1,
+    marginLeft: 10
   },
   bar: {
     flex: 1,
     borderRadius: 5,
     height: 4,
     backgroundColor: '#ffffff',
-  },
+  }
 });
 
 export default styles;

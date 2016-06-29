@@ -4,7 +4,7 @@ import styles from './styles.js';
 
 const Slant = (props) => {
   return(
-     <View>
+    <View>
       <Animated.View style={styles.bar} />
     </View>
 	)
