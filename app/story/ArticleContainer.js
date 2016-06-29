@@ -16,8 +16,8 @@ const ArticleContainer = (article) => {
     <View>
       <Publication 
         publication={article.publication} 
-        headline={article.headline}  />
-      <Slant mood={article.moodScore} />
+        headline={article.headline}  
+        moodScore = {article.moodScore} />
     </View>
   );
 }

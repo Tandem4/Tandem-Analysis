@@ -4,8 +4,8 @@ import styles from './styles.js';
 
 const Slant = (props) => {
   return(
-     <View style={styles.moodScore}>
-      <Animated.View style={[styles.bar, {width: props.mood}]} />
+     <View>
+      <Animated.View style={styles.bar} />
     </View>
 	)
 }

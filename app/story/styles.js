@@ -6,16 +6,24 @@ let styles = StyleSheet.create({
     flex: 1,
   },
   publication: {
-    flexDirection: 'row',
+    flex: 3,
+    flexWrap: 'wrap',
     paddingLeft: 25,
     paddingRight: 25,
     paddingTop: 10,
     paddingBottom: 10,
     marginLeft: 15,
     marginRight: 15,
-    backgroundColor: '#323a45',
+    backgroundColor: '#00afd1',
     borderTopLeftRadius: 5,
-    borderTopRightRadius: 5
+    borderTopRightRadius: 5,
+    shadowColor: '#000000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: {
+      heigth: 1,
+      width: 0
+    }
   },
   publicationText: {
     fontSize: 13,
@@ -36,28 +44,34 @@ let styles = StyleSheet.create({
     borderBottomColor: '#eaedf1',
     backgroundColor: '#ffffff',
     borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5
+    borderBottomRightRadius: 5,
+    shadowColor: '#000000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: {
+      heigth: 1,
+      width: 0
+    }
   },
   headlineText: {
     flex: 1,
     flexWrap: 'wrap',
-    color: '#000',
-    fontSize: 16
+    color: '#5d5d5d',
+    fontSize: 18
   },
   moodScore: {
     flex: 1,
-    marginLeft: 10,
-    flexDirection: 'column'
+    marginTop: 6,
   },
   firstRow: {
     flex: 4
   },
   bar: {
-    alignSelf: 'flex-end',
+    flex: 1,
+    alignSelf: 'stretch',
     borderRadius: 5,
     height: 4,
-    marginRight: 5,
-    backgroundColor: '#f55443',
+    backgroundColor: '#ffffff',
   },
 });
 
