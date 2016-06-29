@@ -13,7 +13,7 @@ class Publication extends Component {
 	    <View>
 		    <View style={styles.publication}>
 		      <Text style={styles.publicationText}>
-		        {this.props.publication.toUpperCase()}
+}
 		      </Text>
 	      </View>
 	      <View>
