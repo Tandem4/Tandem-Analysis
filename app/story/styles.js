@@ -10,8 +10,6 @@ let styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 25,
     paddingRight: 25,
-    paddingTop: 10,
-    paddingBottom: 10,
     marginLeft: 15,
     marginRight: 15,
     backgroundColor: '#00afd1',
@@ -81,7 +79,6 @@ let styles = StyleSheet.create({
   },
   full: {
     flex: 1
-
   }
 });
 
