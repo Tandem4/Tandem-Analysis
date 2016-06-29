@@ -35,7 +35,10 @@ module.exports = function() {
       var rawDataArr = item;
       // console.log('returns an array', rawDataArr)
       // rawDataArr.forEach(Alchemy.sendData(data));
-      async.each(rawDataArr, Alchemy.sendData, function (err, results) { 
+      async.map(rawDataArr, Alchemy.sendData, function (err, results) { 
+        if ( err ) { 
+          console.log('An error occured in async', err); 
+        }
         console.log('final results: ', results); 
       });
     })
