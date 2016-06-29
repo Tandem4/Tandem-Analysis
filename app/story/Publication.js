@@ -12,8 +12,9 @@ class Publication extends Component {
 	render() {
 		return (
 	    <View>
-		    <View style={styles.publication}>
-			    <View>
+
+		    <View style={styles.firstRow}>
+			    <View style={styles.publication}>
 			      <Text style={styles.publicationText}>
 			        {this.props.publication}
 			      </Text>
@@ -22,11 +23,13 @@ class Publication extends Component {
 	          <Slant mood={this.props.moodScore} />
           </View>
 	      </View>
+
 	      <View style={styles.headline}>
 		      <Text style={styles.headlineText}>
 		        {this.props.headline}
 		      </Text>
 	      </View>
+	      
 	    </View>
 		)
 	}

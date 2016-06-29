@@ -5,9 +5,9 @@ let styles = StyleSheet.create({
     backgroundColor: '#eaedf1',
     flex: 1,
   },
-  publication: {
-    flex: 3,
-    flexWrap: 'wrap',
+  firstRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingLeft: 25,
     paddingRight: 25,
     paddingTop: 10,
@@ -24,6 +24,9 @@ let styles = StyleSheet.create({
       heigth: 1,
       width: 0
     }
+  },
+  publication: {
+    flex: 3
   },
   publicationText: {
     fontSize: 13,
@@ -60,15 +63,10 @@ let styles = StyleSheet.create({
     fontSize: 18
   },
   moodScore: {
-    flex: 1,
-    marginTop: 6,
-  },
-  firstRow: {
-    flex: 4
+    flex: 1
   },
   bar: {
     flex: 1,
-    alignSelf: 'stretch',
     borderRadius: 5,
     height: 4,
     backgroundColor: '#ffffff',
