@@ -67,7 +67,6 @@ class Publication extends Component {
 			      </Text>
 
 		      </TouchableOpacity>
-
 	      </View>
 	    </View>
 		)

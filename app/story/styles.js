@@ -5,18 +5,6 @@ let styles = StyleSheet.create({
     backgroundColor: '#eaedf1',
     flex: 1,
   },
-  card: {
-    flexDirection: 'row',
-    paddingLeft: 25,
-    paddingRight: 25,
-    paddingTop: 15,
-    paddingBottom: 15,
-    marginLeft: 15,
-    marginRight: 15,
-    borderBottomWidth: 4,
-    borderBottomColor: '#eaedf1',
-    backgroundColor: '#ffffff'
-  },
   publication: {
     flexDirection: 'row',
     paddingLeft: 25,
@@ -25,14 +13,33 @@ let styles = StyleSheet.create({
     paddingBottom: 10,
     marginLeft: 15,
     marginRight: 15,
-    backgroundColor: '#323a45'
+    backgroundColor: '#323a45',
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5
   },
   publicationText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 'bold',
     color: '#ffffff'
   },
   headline: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingLeft: 25,
+    paddingRight: 25,
+    paddingTop: 15,
+    paddingBottom: 15,
+    marginLeft: 15,
+    marginRight: 15,
+    marginBottom: 11,
+    borderBottomColor: '#eaedf1',
+    backgroundColor: '#ffffff',
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5
+  },
+  headlineText: {
+    flex: 1,
     flexWrap: 'wrap',
     color: '#000',
     fontSize: 16
