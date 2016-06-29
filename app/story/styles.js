@@ -63,7 +63,8 @@ let styles = StyleSheet.create({
     fontSize: 18
   },
   moodScore: {
-    flex: 1
+    flex: 1,
+    marginLeft: 10
   },
   bar: {
     flex: 1,
@@ -80,6 +81,7 @@ let styles = StyleSheet.create({
   },
   full: {
     flex: 1
+
   }
 });
 

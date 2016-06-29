@@ -1,9 +1,5 @@
-import React, { Component, PropTypes, LinkingIOS } from 'react';
-import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableOpacity, Slider } from 'react-native';
-import Sldr from 'react-native-slider';
-import Icon from 'react-native-vector-icons/Ionicons';
-
-
+import React, { Component, PropTypes, Linking} from 'react';
+import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
 import styles from './styles.js';
 import Slant from './Slant';
 
@@ -18,6 +14,8 @@ class Publication extends Component {
 
         {/* First Row => Pub & Graph Info */}
 		    <View style={styles.firstRow}>
+
+		      {/* Publication */}
 			    <View style={styles.publication}>
 			      <Text style={styles.publicationText}>
 			        <Icon name="md-paper" size={17} color="#ffffff"></Icon>
@@ -35,15 +33,15 @@ class Publication extends Component {
 
 					{/* MoodScore Graph  */}
 		      <View style={styles.moodScore}>
-		        <Sldr
+
+		        <Slider
 		          minimumValue = {0}
 		          maximumValue = {40}
-		          minimumTrackTintColor = '#ffffff'
-		          maximumTrackTintColor = '#ffffff'
-		          thumbTintColor = '#ffffff'
 		          disabled = { true }
 		          value={this.props.moodScore} />
+
           </View>
+
 	      </View>
 
 				{/* Second Row => Headline Text */}
