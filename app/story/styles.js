@@ -30,7 +30,6 @@ let styles = StyleSheet.create({
   publicationText: {
     fontSize: 11,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
     color: '#ffffff'
   },
   headline: {

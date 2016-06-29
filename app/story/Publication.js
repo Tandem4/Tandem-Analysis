@@ -47,7 +47,6 @@ class Publication extends Component {
 		          value={this.props.moodScore} />
 
           </View>
-
 	      </View>
 
 				{/* Second Row => Headline Text */}
