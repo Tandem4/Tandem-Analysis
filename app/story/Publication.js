@@ -1,17 +1,18 @@
-import React, { Component, PropTypes, Linking} from 'react';
-import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
+import React, { Component, PropTypes, LinkingIOS } from 'react';
+import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableOpacity, Slider } from 'react-native';
 import Sldr from 'react-native-slider';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Communications from 'react-native-communications';
 
 
 import styles from './styles.js';
 import Slant from './Slant';
 
-let staticURL = 'https://www.facebook.com';
+
 
 class Publication extends Component {
-	handleClick(){
-    Linking.openURL(staticURL).catch(err => console.error('An error occured', err));
+	_onPressHeadline(){
+    Linking.openURL('https://www.facebook.com').catch(err => console.error('An error occured', err));
 	}
 	render() {
 		return (
@@ -53,11 +54,23 @@ class Publication extends Component {
 
 				{/* Second Row => Headline Text */}
 	      <View style={styles.headline}>
-		      <Text style={styles.headlineText}>
-		        {this.props.headline}
-		        { ' ' }
-		        <Icon name="ios-link" size={18} color="#5d5d5d"></Icon>
-		      </Text>
+
+	        <TouchableOpacity 
+	          onPress={() => Communications.web('https://github.com/facebook/react-native')} 
+	          style={{flex: 1, flexWrap: 'wrap'}}>
+
+			      <Text style={styles.headlineText}
+			        numberOfLines={2}>
+			        {this.props.headline}
+			        { ' ' }
+			      </Text>
+
+			      <Text>
+			        <Icon name="ios-link" size={18} color="#5d5d5d"></Icon>
+			      </Text>
+			      
+		      </TouchableOpacity>
+
 	      </View>
 
 	    </View>
