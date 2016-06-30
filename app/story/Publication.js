@@ -1,12 +1,17 @@
-import React, { Component, PropTypes, Linking} from 'react';
-import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
+import React, { Component, PropTypes, LinkingIOS } from 'react';
+import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableOpacity, Slider } from 'react-native';
 import Sldr from 'react-native-slider';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Communications from 'react-native-communications';
 
 
 import styles from './styles.js';
 import Slant from './Slant';
 
+<<<<<<< 7ac4821d71d0c4c7593566eda8538dbe99836c70
+=======
+
+>>>>>>> Add Navigation Component
 
 class Publication extends Component {
 	_onPressHeadline(){
@@ -53,8 +58,13 @@ class Publication extends Component {
 				{/* Second Row => Headline Text */}
 	      <View style={styles.headline}>
 
+<<<<<<< 7ac4821d71d0c4c7593566eda8538dbe99836c70
 	        <TouchableOpacity
 	          onPress={() => Communications.web('https://github.com/facebook/react-native')}
+=======
+	        <TouchableOpacity 
+	          onPress={() => Communications.web('https://github.com/facebook/react-native')} 
+>>>>>>> Add Navigation Component
 	          style={{flex: 1, flexWrap: 'wrap'}}>
 
 			      <Text style={styles.headlineText}
@@ -66,6 +76,7 @@ class Publication extends Component {
 			      <Text>
 			        <Icon name="ios-link" size={18} color="#5d5d5d"></Icon>
 			      </Text>
+<<<<<<< 7ac4821d71d0c4c7593566eda8538dbe99836c70
 
 		      </TouchableOpacity>
 		      <Text style={styles.headlineText}>
@@ -73,6 +84,11 @@ class Publication extends Component {
 		        { ' ' }
 		        <Icon name="ios-link" size={18} color="#5d5d5d"></Icon>
 		      </Text>
+=======
+			      
+		      </TouchableOpacity>
+
+>>>>>>> Add Navigation Component
 	      </View>
 
 	    </View>
