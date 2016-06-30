@@ -4,6 +4,10 @@ import { View, ScrollView, Text, ListView, TouchableHighlight } from 'react-nati
 import { connect } from 'react-redux';
 import  NavigationBar  from 'react-native-navbar';
 
+<<<<<<< dc5a900372fece4f712057b6a21652b65997bf62
+=======
+
+>>>>>>> merger nicole's sile
 import articlesData from '../data/articlesData';
 import ArticleContainer from './ArticleContainer';
 import * as storyActions from './storyActions';
