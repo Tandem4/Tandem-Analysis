@@ -2,7 +2,6 @@ import React, { Component, PropTypes, LinkingIOS } from 'react';
 import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableOpacity, Slider } from 'react-native';
 import Sldr from 'react-native-slider';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Communications from 'react-native-communications';
 
 
 import styles from './styles.js';
