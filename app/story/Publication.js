@@ -1,6 +1,11 @@
 import React, { Component, PropTypes, Linking} from 'react';
-import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight } from 'react-native';
-import styles from '../assets/styles.js';
+import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
+import Sldr from 'react-native-slider';
+import Icon from 'react-native-vector-icons/Ionicons';
+
+
+import styles from './styles.js';
+import Slant from './Slant';
 
 let staticURL = 'https://www.facebook.com';
 
@@ -18,6 +23,8 @@ class Publication extends Component {
 		      {/* Publication */}
 			    <View style={styles.publication}>
 			      <Text style={styles.publicationText}>
+			        <Icon name="md-paper" size={17} color="#ffffff"></Icon>
+			        { '   ' }
 			        {this.props.publication}
 			      </Text>
 		      </View>
@@ -48,6 +55,8 @@ class Publication extends Component {
 	      <View style={styles.headline}>
 		      <Text style={styles.headlineText}>
 		        {this.props.headline}
+		        { ' ' }
+		        <Icon name="ios-link" size={18} color="#5d5d5d"></Icon>
 		      </Text>
 	      </View>
 

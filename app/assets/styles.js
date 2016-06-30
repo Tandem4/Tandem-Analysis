@@ -27,8 +27,9 @@ let styles = StyleSheet.create({
     flex: 3
   },
   publicationText: {
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontFamily: 'Silom',
+    fontSize: 15,
+    // fontWeight: 'bold',
     color: '#ffffff'
   },
   headline: {
@@ -57,8 +58,9 @@ let styles = StyleSheet.create({
   headlineText: {
     flex: 1,
     flexWrap: 'wrap',
+    fontFamily: 'Oswald',
     color: '#5d5d5d',
-    fontSize: 18
+    fontSize: 20
   },
   moodScore: {
     flex: 1,
