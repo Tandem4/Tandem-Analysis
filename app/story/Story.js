@@ -9,7 +9,7 @@ import styles from './styles.js';
 import articlesData from '../data/articlesData';
 import ArticleContainer from './ArticleContainer';
 import * as storyActions from './storyActions';
-import styles from '../assets/styles.js';
+import styles from './styles.js';
 import Store from '../store.js';
 
 class Story extends Component {

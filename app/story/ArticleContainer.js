@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight } from 'react-native';
-import styles from '../assets/styles.js';
+import styles from './styles.js';
 
 import Publication from './Publication';
 import Slant from './Slant';

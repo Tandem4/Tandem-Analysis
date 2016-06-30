@@ -4,7 +4,7 @@ import { View, ScrollView, Text, ListView, TouchableHighlight } from 'react-nati
 import { connect } from 'react-redux';
 
 import Store from '../store.js';
-import styles from '../assets/styles.js';
+import styles from './styles.js';
 import articlesData from '../data/trendsData';
 // import DashContainer from './DashContainer';
 import * as trendActions from './trendActions';

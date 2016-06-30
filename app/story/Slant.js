@@ -1,6 +1,6 @@
 import React, { Component, PropTypes, TouchableHighlight } from 'react';
 import { Animated, StyleSheet, View, Text, Dimensions, WebView } from 'react-native';
-import styles from '../assets/styles.js';
+import styles from './styles.js';
 
 const Slant = (props) => {
   return(

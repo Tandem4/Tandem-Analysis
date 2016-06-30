@@ -9,7 +9,6 @@ import styles from './styles.js';
 import Slant from './Slant';
 
 
-
 class Publication extends Component {
 	_onPressHeadline(){
     Linking.openURL('https://www.facebook.com').catch(err => console.error('An error occured', err));
@@ -55,8 +54,8 @@ class Publication extends Component {
 				{/* Second Row => Headline Text */}
 	      <View style={styles.headline}>
 
-	        <TouchableOpacity 
-	          onPress={() => Communications.web('https://github.com/facebook/react-native')} 
+	        <TouchableOpacity
+	          onPress={() => Communications.web('https://github.com/facebook/react-native')}
 	          style={{flex: 1, flexWrap: 'wrap'}}>
 
 			      <Text style={styles.headlineText}
@@ -68,7 +67,7 @@ class Publication extends Component {
 			      <Text>
 			        <Icon name="ios-link" size={18} color="#5d5d5d"></Icon>
 			      </Text>
-			      
+
 		      </TouchableOpacity>
 
 	      </View>
