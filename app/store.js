@@ -3,12 +3,10 @@ import { ListView } from 'react-native';
 
 import rootReducer from './rootReducer';
 // import trendsData from './data/trendsData';
-import articlesData from './data/articlesData';
+// import articlesData from './data/articlesData';
 
-let sucker = 'sucker free';
-
-// for ListView
-let trendsData = { message: "Loading Trends..." };
+let trendsData   = { message: "Loading Trends..." };
+let articlesData = { message: "Loading Articles..." };
 
 // for ListView
 let dataSource = new ListView.DataSource({

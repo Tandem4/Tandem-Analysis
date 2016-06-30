@@ -14,7 +14,7 @@ class App extends Component {
         <Navigator
           initialRoute={{name: 'Trend', component: Trend}}
           configureScene={() => ({
-          	...Navigator.SceneConfigs.VerticalDownSwipeJump,
+          	...Navigator.SceneConfigs.HorizontalSwipeJump,
           	gestures: {},
           })}
           renderScene={(route, navigator) => {

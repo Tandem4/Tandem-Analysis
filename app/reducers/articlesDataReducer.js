@@ -1,8 +1,8 @@
 const articlesData = (state = {}, action) => {
   switch (action.type) {
-  	case 'UPDATE_ARTICLEDATA':
-  	  return action.type;
-    default: 
+  	case 'REQUEST_ARTICLES':
+  	  return action.articles;
+    default:
       return state;
   }
 };

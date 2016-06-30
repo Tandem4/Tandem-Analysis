@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import Store from '../store.js';
 import styles from '../assets/styles.js';
 import articlesData from '../data/trendsData';
-import DashContainer from './DashContainer';
+// import DashContainer from './DashContainer';
 import * as trendActions from './trendActions';
 
 class Trend extends Component {
@@ -52,6 +52,7 @@ class Trend extends Component {
     )
   }
 
+  // individual components for ListView
   renderRow(trend) {
 
     var navigate = function() {
@@ -75,6 +76,7 @@ class Trend extends Component {
 function mapStateToProps(state) {
   return {
     trendsData: state.trendsData,
+
     currentDate: function() {
       return new Date().toDateString();
     }(),
@@ -82,7 +84,7 @@ function mapStateToProps(state) {
     // for ListView
     dataSource: function() {
 
-      currentTrends = state.dataSource.cloneWithRows(state.trendsData.trends || []);
+      var currentTrends = state.dataSource.cloneWithRows(state.trendsData.trends || []);
 
       currentTrends._dataBlob.s1.sort(function(a, b) {
         if (a.rank < b.rank) {

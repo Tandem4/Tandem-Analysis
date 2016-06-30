@@ -15,9 +15,9 @@ const ArticleContainer = (article) => {
   return (
     <View style={styles.card} >
       <Publication
-        publication={article.publication}
-        headline={article.headline}  />
-      <Slant mood={article.moodScore} />
+        publication={article.article_date}
+        headline={article.title}  />
+      <Slant mood={article.joy} />
     </View>
   );
 }
