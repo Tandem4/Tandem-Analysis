@@ -17,13 +17,6 @@ class Story extends Component {
     this.prepopulateData.bind(this)();
   }
 
-  // PROBLEM:  The page is rendering before the async
-  // prepopulate call is finished.
-  // Why is this not happening on the trend view?
-  componentDidMount() {
-    // this.render();
-  }
-
   prepopulateData() {
     var context = this;
 
@@ -75,7 +68,6 @@ function mapStateToProps(state) {
           // a must be equal to b
           return 0;
         });
-
 
       return currentArticles;
     }()
