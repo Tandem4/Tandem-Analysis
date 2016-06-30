@@ -45,6 +45,7 @@ class Trend extends Component {
             dataSource={this.props.dataSource}
             {...actions}
             renderRow = { this.renderRow.bind(this) }
+            enableEmptySections={true}
           />
        </ScrollView>
       </View>
