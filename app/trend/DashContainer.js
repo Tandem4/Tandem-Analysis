@@ -7,7 +7,9 @@ import Trend from './Trend';
 const DashContainer = (trend) => {
   return (
     <View style={styles.card} >
-      <Text style={styles.trendRow} >{trend.trend_name}</Text>
+      <TouchableHighlight style={styles.full} onPress={navigate}>
+        <Text style={styles.trendRow} >{trend.trend_name}</Text>
+      </TouchableHighlight>
     </View>
   );
 }

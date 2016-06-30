@@ -1,6 +1,6 @@
-import React, { Component, PropTypes, TouchableHighlight } from 'react';
+import React, { Component, PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
-import { View, ScrollView, Text, ListView } from 'react-native';
+import { View, ScrollView, Text, ListView, TouchableHighlight } from 'react-native';
 import { connect } from 'react-redux';
 
 import Store from '../store.js';
@@ -11,8 +11,6 @@ import * as trendActions from './trendActions';
 
 class Trend extends Component {
   componentWillMount() {
-
-    // TODO: why does this not return until clicked again?
     this.prepopulateData.bind(this)();
   }
 
@@ -28,48 +26,49 @@ class Trend extends Component {
     });
   }
 
-  // navigate(name) {
-  //   alert('called navigate');
-  //   this.props.navigator.push({
-  //     name: 'Story',
-  //     passProps: {
-  //       name: name
-  //     }
-  //   })
-  // }
-
-// <Text>GO GO GO</Text>
+  navigate() { this.props.navigator.push({ name: 'Story' }); }
 
   render() {
     const { state, actions } = this.props;
     return (
-      <View style={styles.scroll}>
-
+      <View style={styles.full}>
         <ScrollView
          ref={(scrollView) => { _scrollView = scrollView; }}
          automaticallyAdjustContentInsets={false}
          scrollEventThrottle={200}
          >
-        <Text style={[styles.trendRow, styles.title]}>
-          Newsfeed
-        </Text>
-        <Text style={styles.date}>{this.props.currentDate}</Text>
-        <ListView
-          dataSource={this.props.dataSource}
-          {...actions}
-          renderRow = {DashContainer}
-        />
+          <Text style={[styles.trendRow, styles.title]}>
+            Newsfeed
+          </Text>
+          <Text style={styles.date}>{this.props.currentDate}</Text>
+          <ListView
+            dataSource={this.props.dataSource}
+            {...actions}
+            renderRow = { this.renderRow.bind(this) }
+          />
        </ScrollView>
       </View>
     )
   }
-}
 
-// <TouchableHighlight onPress={this.navigate}>
-//         </TouchableHighlight>
-// <TouchableHighlight onPress={ this._navigate }>
-//     <Text>GO To View</Text>
-// </TouchableHighlight>
+  renderRow(trend) {
+
+    var navigate = function() {
+      this.props.navigator.push({
+        name: 'Story',
+      });
+    }.bind(this)
+
+    return (
+      <View style={styles.card} >
+        <TouchableHighlight style={styles.full} onPress={ navigate }>
+          <Text style={styles.trendRow} >{trend.trend_name}</Text>
+        </TouchableHighlight>
+      </View>
+    );
+
+  }
+}
 
 // bring in from state parts that this component is interested in
 function mapStateToProps(state) {
@@ -81,10 +80,9 @@ function mapStateToProps(state) {
 
     // for ListView
     dataSource: function() {
-      console.log("Sort state data: ", state.trendsData);
-      var currentTrends = state.dataSource.cloneWithRows(state.trendsData.trends || []);
-      // console.log('trends from datasource in mapStateToProps', currentTrends);
-      // console.log('trends from datasource in mapStateToProps', currentTrends._dataBlob.s1);
+
+      currentTrends = state.dataSource.cloneWithRows(state.trendsData.trends || []);
+
       currentTrends._dataBlob.s1.sort(function(a, b) {
         if (a.rank < b.rank) {
             return -1;
@@ -95,15 +93,14 @@ function mapStateToProps(state) {
           // a must be equal to b
           return 0;
         });
+
       return currentTrends;
     }()
   }
 }
 
-
 function mapDispatchToProps(dispatch) {
   return bindActionCreators(trendActions, dispatch);
-  // return { actions: bindActionCreators(actions, dispatch) }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Trend);

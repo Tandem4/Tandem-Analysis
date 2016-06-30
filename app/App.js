@@ -18,12 +18,12 @@ class App extends Component {
           	gestures: {},
           })}
           renderScene={(route, navigator) => {
-              if(route.name == 'Trend') {
-                return <Trend navigator={navigator} {...route.passProps}  />
-              }
-              if(route.name == 'Story') {
-                return <Story navigator={navigator} {...route.passProps}  />
-              }
+            if(route.name == 'Trend') {
+              return <Trend navigator={navigator} {...route.passProps}  />
+            }
+            if(route.name == 'Story') {
+              return <Story navigator={navigator} {...route.passProps}  />
+            }
 
           	// if (route.component) {
           	// 	return React.createElement(route.component, { navigator, ...route.passProps });

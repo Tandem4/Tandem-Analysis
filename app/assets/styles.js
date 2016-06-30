@@ -89,7 +89,7 @@ let styles = StyleSheet.create({
     textAlign: 'center',
     paddingBottom: 20
   },
-  scroll: {
+  full: {
     flex: 1
   }
 });
