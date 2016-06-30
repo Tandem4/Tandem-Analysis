@@ -1,6 +1,8 @@
 import React, { Component, PropTypes, Linking} from 'react';
 import { Animated, StyleSheet, View, Text, Dimensions, WebView, TouchableHighlight, Slider } from 'react-native';
 import Sldr from 'react-native-slider';
+import Icon from 'react-native-vector-icons/Ionicons';
+
 
 import styles from './styles.js';
 import Slant from './Slant';
@@ -66,6 +68,11 @@ class Publication extends Component {
 			      </Text>
 
 		      </TouchableOpacity>
+		      <Text style={styles.headlineText}>
+		        {this.props.headline}
+		        { ' ' }
+		        <Icon name="ios-link" size={18} color="#5d5d5d"></Icon>
+		      </Text>
 	      </View>
 
 	    </View>
