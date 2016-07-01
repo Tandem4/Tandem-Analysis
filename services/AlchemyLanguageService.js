@@ -57,11 +57,12 @@ var singleAlchemyRequest = function(row, callback) {
 
 var allAlchemyRequests = function(batch, callback) {
 
-	async.map(batch, singleAlchemyRequest, function (err, results) {
-	  if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }
-	  callback(results);
-	});
-
+	async.map( batch,
+		         singleAlchemyRequest,
+		         function (err, results) {
+	             if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }
+	             callback(results);
+	           });
 };
 
 module.exports = allAlchemyRequests;
