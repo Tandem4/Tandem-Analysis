@@ -1,4 +1,4 @@
-var ServicesController = require('../services/ServicesController');
+// var ServicesController = require('../services/ServicesController');
 var config = require('../../../env/client-config');
 
 // var dummyData = require('../data/dummyData');
@@ -25,7 +25,7 @@ module.exports = function() {
   // var rawdata = dummyData;
   // ServicesController.createSentiment(rawdata);
   // ServicesController.createEmotion(rawdata);
-  
+
   // var rawDataArr = [];
 
   mongo.connect(config.MONGO_URL).then(function(db) {
@@ -35,11 +35,11 @@ module.exports = function() {
       var rawDataArr = item;
       // console.log('returns an array', rawDataArr)
       // rawDataArr.forEach(Alchemy.sendData(data));
-      async.map(rawDataArr, Alchemy.sendData, function (err, results) { 
-        if ( err ) { 
-          console.log('An error occured in async', err); 
+      async.map(rawDataArr, Alchemy.sendData, function (err, results) {
+        if ( err ) {
+          console.log('An error occured in async', err);
         }
-        console.log('final results: ', results); 
+        console.log('final results: ', results);
       });
     })
     .catch(function(err) {
