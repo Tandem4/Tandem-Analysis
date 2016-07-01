@@ -5,62 +5,6 @@ const _ = require('underscore');
 const API_KEY = process.env.TANDEM_API_KEY;
 const RELEVANCE = 0.5;
 
-// ************************************
-//  Fetch Records from Analysis Service
-// ************************************
-
-// 1) Receive records in batches from Analysis service
-var articleBatch = [
-  {
-    // emotionObject:  {
-      anger: 44.8812,
-      disgust: 39.0578,
-      fear: 60.339,
-      joy: 2.7489,
-      sadness: 10.0003,
-      _id: '576e0fcb1a97e5ae1x450a72',
-    // },
-    // sentimentObject: {
-      type: 'positive',
-      // _id: '576e0fcb1a97e5ae1d450a72'
-    // },
-    // rawData: {
-      "pub_name": "USA Today",
-      "pub_url": "http://www.telegraph.co.uk",
-      "title": "Creating a stealthier world",
-      "article_url": "http://www.bbc.com/sport/cricket/36626699",
-      "image_url": "http://www.telegraph.co.uk/content/dam/spark/Spark%20Distribution%20images/GSK-laborator-small.jpg",
-      "article_date": "2016-06-24T15:17:19-07:00",
-      "article_summary": "Creating a healthier world",
-      // _id: '576e0fcb1a97e5ae1d450a72'
-    // }
-  },
-  {
-    // emotionObject:  {
-      anger: 29.8812,
-      disgust: 44.0578,
-      fear: 40.339,
-      joy: 29.7489,
-      sadness: 21.0003,
-      _id: '576e0fcb1a97e5ae1d450a99',
-    // },
-    // sentimentObject: {
-      type: 'negative',
-    //   _id: '576e0fcb1a97e5ae1d450a72'
-    // },
-    // rawData: {
-      "pub_name": "USA Today",
-      "pub_url": "http://www.telegraph.co.uk",
-      "title": "Destroying a healthier world",
-      "article_url": "http://www.bbc.com/news/uk-politics-32810887",
-      "image_url": "http://www.telegraph.co.uk/content/dam/spark/Spark%20Distribution%20images/GSK-laborator-small.jpg",
-      "article_date": "2016-05-24T15:17:19-07:00",
-      "article_summary": "Destroying a healthier world",
-    //   _id: '576e0fcb1a97e5ae1d450a72'
-    // }
-  }
-];
-
 // *********************************
 //  Trend analysis per article
 // *********************************
@@ -77,7 +21,6 @@ var filterResults = function(results, prop) {
 
 // Query Watson API for entities & concepts and attach to an article
 var singleWatsonRequest = function(articleObj, doneCallback) {
-  console.log('calling singleWatsonRequest with ', articleObj.title);
   request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
     if (err) { console.log('An error occurred in singleWatsonRequest: ', err); }
 
@@ -95,10 +38,9 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
       // find the publication to which this article belongs
       db.Publication.where({pub_name: articleObj.pub_name}).fetch()
       .then( function(matchedPub) {
-
         // add our new article to the db before callback
         db.Article.forge({
-          "_id": articleObj._id,
+          "_id": '' + articleObj._id,
           "title": articleObj.title,
           "frequency_viewed": 0,
           "article_date": articleObj.article_date,
@@ -111,9 +53,10 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
           "article_summary": articleObj.article_summary,
           "article_url": articleObj.article_url,
           "image_url": articleObj.image_url,
-        }).save({"pub_id": matchedPub._id})
+        }).save({"pub_id": null})
 
         .then( function() {
+          console.log("ARTICLE SAVED TO DB");
           doneCallback(null, articleObj);
         });
       });
@@ -271,13 +214,15 @@ var rankAllTrends = function() {
 
 // Given a batch of articles to process,
 // Append a collection of trends to each article
-collectWatsonTrends(articleBatch, function(articlesWithTrends) {
-  console.log('articlesWithTrends: ', articlesWithTrends);
+module.exports = function(batch) {
+  collectWatsonTrends(batch, function(articlesWithTrends) {
+    console.log('articlesWithTrends: ', articlesWithTrends);
 
-  // Then for each article in that collection
-  // run through its newly collected trends
-  // and either add or update the trend table
-  // Then re-rank all Trends given the new information
-  incorporateAllNewTrends(articlesWithTrends, rankAllTrends);
+    // Then for each article in that collection
+    // run through its newly collected trends
+    // and either add or update the trend table
+    // Then re-rank all Trends given the new information
+    incorporateAllNewTrends(articlesWithTrends, rankAllTrends);
 
-});
+  });
+}

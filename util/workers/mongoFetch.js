@@ -1,54 +1,37 @@
-// var ServicesController = require('../services/ServicesController');
-// var config = require('../../../env/client-config');
-
-// var dummyData = require('../data/dummyData');
-// var dummyData2 = require('../data/dummyData2');
-
-var Promise = require('bluebird');
-var mongodb = require('mongodb');
-var mongo = require('mongodb-bluebird');
-var MongoClient = mongodb.MongoClient;
-var Collection = mongodb.Collection;
-var assert = require('assert');
-var ObjectId = require('mongodb').ObjectID;
-var async = require('async');
-
+var async             = require('async');
+var mongo             = require('mongodb-bluebird');
 var TANDEM_MONGO_HOST = process.env.TANDEM_MONGO_HOST;
+var Alchemy           = require('../services/AlchemyLanguageService.js');
+var TrendsService     = require('../services/trendsService.js');
+
+// remove these modules:
+// var Promise = require('bluebird');
+// var mongodb = require('mongodb');
+// var MongoClient = mongodb.MongoClient;
+// var Collection = mongodb.Collection;
+// var assert = require('assert');
+// var ObjectId = require('mongodb').ObjectID;
 // var TANDEM_MONGO_PW = process.env.TANDEM_MONGO_PW;
-
-var Alchemy = require('../services/AlchemyLanguageService.js')
-
-
-var article_urls = [];
+// var article_urls = [];
 
 
 module.exports = function() {
-
-  // test with dummy data
-  // var rawdata = dummyData;
-  // ServicesController.createSentiment(rawdata);
-  // ServicesController.createEmotion(rawdata);
-
-  // var rawDataArr = [];
 
   mongo.connect(TANDEM_MONGO_HOST).then(function(db) {
     var news = db.collection('news');
     return news.find()
     .then(function(rawArticleBatch) {
-      // var rawDataArr = articleBatch;
-      // console.log('returns an array', rawDataArr)
-      // rawDataArr.forEach(Alchemy.sendData(data));
+      var oneArticle = rawArticleBatch.slice(0,1);
 
-      console.log('returned from mongo:', rawArticleBatch);
-      // async.map(rawDataArr, Alchemy.sendData, function (err, results) {
-      //   if ( err ) {
-      //     console.log('An error occured in async', err);
-      //   }
-      //   console.log('final results: ', results);
-      // });
+      console.log('returned from mongo:', oneArticle);
+      async.map(oneArticle, Alchemy.sendData, function (err, results) {
+        if ( err ) { console.log('An error occurred in mongoFetch async', err); }
+        console.log('final results from mongoFetch async: ', results);
+        TrendsService(results);
+      });
     })
     .catch(function(err) {
-      console.log("An error occured in Mongo", err);
+      console.log("An error occured in mongoFetch", err);
     });
   });
 

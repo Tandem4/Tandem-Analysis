@@ -1,15 +1,13 @@
-// error [Error: Invalid URI "undefined?url=http://www.nytimes.com/2016/06/30/world/middleeast/turkey-a-conduit-for-fighters-joining-isis-begins-to-feel-its-wrath.html?ref=todayspaper&apikey=5521f5427206a5884e29b6c3576dfcecfc4b59cd&outputMode=json"]
-
 var async = require('async');
 var request = require('request');
 
-var SENTIMENT_URL = process.env.SENTIMENT_URL;
-var EMOTION_URL   = process.env.EMOTION_URL;
+var SENTIMENT_URL = process.env.WATSON_SENTIMENT_URL;
+var EMOTION_URL   = process.env.WATSON_EMOTION_URL;
 var ALCHEMY_KEY   = process.env.TANDEM_ALCHEMY_KEY;
 var AlchemyAPI    = require('alchemy-api');
 var Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
 
-var dummyURL = "http://www.telegraph.co.uk/sponsored/health/healthcare-innovation/12179634/innovative-healthcare-products.html?WT.mc_id=tmgspk_listfour_1292_12179634&utm_source=tmgspk&utm_medium=listfour&utm_content=1292&utm_campaign=tmgspk_listfour_1292_12179634";
+// var dummyURL = "http://www.telegraph.co.uk/sponsored/health/healthcare-innovation/12179634/innovative-healthcare-products.html?WT.mc_id=tmgspk_listfour_1292_12179634&utm_source=tmgspk&utm_medium=listfour&utm_content=1292&utm_campaign=tmgspk_listfour_1292_12179634";
 
 module.exports = {
 	sendData: function(row, callback) {
