@@ -1,19 +1,12 @@
-// var express = require('express');
-// var router = express.Router();
+var mongoFetch       = require('./util/workers/mongoFetch.js');
+var sentimentService = require('./util/services/AlchemyLanguageService.js');
+var trendsService    = require('./util/services/trendsService.js');
+var rankingService   = require('./util/services/rankingService.js');
 
-// var app = express();
-
-// var config = require('../env/client-config');
-// var ServicesController = require('./util/services/ServicesController');
-// for testing only
-
-// //Routes
-// require('./routes/view-routes.js')(app);
-
-var mongoFetch = require('./util/workers/mongoFetch.js');
-mongoFetch();
-
-
-// app.listen(3030, function() {
-//   console.log('Silo Server Operational on port 3030')
-// });
+mongoFetch( function(rawData) {
+  sentimentService(rawData, function(sentimentData) {
+    trendsService(sentimentData, function() {
+      rankingService();
+    });
+  })
+});

@@ -7,11 +7,8 @@ var ALCHEMY_KEY   = process.env.TANDEM_ALCHEMY_KEY;
 var AlchemyAPI    = require('alchemy-api');
 var Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
 
-// var dummyURL = "http://www.telegraph.co.uk/sponsored/health/healthcare-innovation/12179634/innovative-healthcare-products.html?WT.mc_id=tmgspk_listfour_1292_12179634&utm_source=tmgspk&utm_medium=listfour&utm_content=1292&utm_campaign=tmgspk_listfour_1292_12179634";
+var singleAlchemyRequest = function(row, callback) {
 
-module.exports = {
-	sendData: function(row, callback) {
-		//console.log('row', row);
 	var queryString = "?url=" +
             row.article_url +
 	               "&apikey=" +
@@ -26,7 +23,6 @@ module.exports = {
 			} else {
 				var filteredData_E = JSON.parse(body1);
 				var emotionObj = {};
-				//console.log('filtered data', filteredData_E);
 				if ( filteredData_E.docEmotions ) {
 	          dataObj['anger'] = filteredData_E.docEmotions['anger'] * 100;
 	          dataObj['disgust'] = filteredData_E.docEmotions['disgust'] * 100;
@@ -48,19 +44,24 @@ module.exports = {
 								dataObj['score'] = filteredData_S.docSentiment['score'] * 100;
 								dataObj['type'] = filteredData_S.docSentiment['type'];;
 		            dataObj['_id'] = row._id;
-	            //console.log('should return dataObj', dataObj);
 				    } else {
 				    	console.log('failed to ping docSentiment proper-like');
 				    }
-            // dataArr.push(dataObj);
 				  }
 
 			    callback(null, dataObj);
-			    // pass on to nicole
 				});
       }
 	  });
 	}
-}
 
+var allAlchemyRequests = function(batch, callback) {
 
+	async.map(batch, singleAlchemyRequest, function (err, results) {
+	  if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }
+	  callback(results);
+	});
+
+};
+
+module.exports = allAlchemyRequests;

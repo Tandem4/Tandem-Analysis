@@ -2,7 +2,7 @@ const async = require('async');
 const request = require('request');
 const db = require('tandem-db');
 const _ = require('underscore');
-const API_KEY = process.env.TANDEM_API_KEY;
+const WATSON_API_KEY = process.env.TANDEM_API_KEY;
 const RELEVANCE = 0.5;
 
 // *********************************
@@ -21,12 +21,12 @@ var filterResults = function(results, prop) {
 
 // Query Watson API for entities & concepts and attach to an article
 var singleWatsonRequest = function(articleObj, doneCallback) {
-  request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
+  request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedNamedEntities?apikey=' + WATSON_API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
     if (err) { console.log('An error occurred in singleWatsonRequest: ', err); }
 
     var parsedEntities = filterResults(JSON.parse(body), 'entities');
 
-    request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
+    request('http://gateway-a.watsonplatform.net/calls/url/URLGetRankedConcepts?apikey=' + WATSON_API_KEY + '&url=' + articleObj.article_url + '&outputMode=json&maxRetrieve=10', function (err, response, body) {
       if (err) { console.log('An error occurred in singleWatsonRequest: ', err); }
 
       var parsedConcepts = filterResults(JSON.parse(body), 'concepts');
@@ -56,7 +56,6 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
         }).save({"pub_id": null})
 
         .then( function() {
-          console.log("ARTICLE SAVED TO DB");
           doneCallback(null, articleObj);
         });
       });
@@ -77,7 +76,7 @@ var collectWatsonTrends = function(batch, callback) {
     // 3rd param is the function to call when everything's done
     function(err, results){
       if (err) { console.log('An error occurred in collectWatsonTrends: ', err); }
-      callback(results);
+      incorporateAllNewTrends(results, callback);
     }
   );
 };
@@ -160,69 +159,8 @@ var incorporateAllNewTrends = function (articlesWithTrends, rankingCallback) {
   });
 };
 
-// *********************************
-//  Trend Ranking
-// *********************************
-//  Exponential Decay:  y = a(1 - r)^t
-//  rank = initialAmount * Math.pow(1 - decayRate, timePassed);
-
-// BUG:  when these get re-ranked, their updated_at field changes
-var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
-
-  // use 24hrs as our time unit
-  var ms = currentTime - Date.parse(trend.get("updated_at"));
-  var s = ms / 1000;
-  var min = s / 60;
-  var h = min / 60;
-  var rank = trendCount * Math.pow(1 - 0.5, h);
-
-  db.Trend.where({_id: trend.attributes._id}).save({rank: rank}, {patch: true})
-  .then(function (trend) {
-    console.log('Updated rank for trend: ', trend.attributes);
-    callback();
-  }).catch( function(err) {
-    console.log('There was an error in rankSingleTrend: ', err);
-  });
-};
-
-var rankAllTrends = function() {
-
-  // grab all trends from the db now that they've been updated per the new batch of articles
-  db.Trends.fetch().then(function(allTrends) {
-    var trendCount = allTrends.length;
-    var currentTime = Date.now();
-
-    // For each trend in this collection,
-    async.map(allTrends.models,
-
-      // call a ranking function on it
-      rankSingleTrend.bind(null, trendCount, currentTime),
-
-      // then close the database connection when finished
-      function() {
-        db.db.knex.destroy();
-      }
-    );
-  });
-};
-
-// // Also: we need to make sure there's a record in the join table for each article-trend relationship added.
-// db.article_trend.set(); //? join table in bookshelf?
-
-// TODO: wrap this into module.exports
-// TODO: implement changes to schema for tandem-db
-
-// Given a batch of articles to process,
-// Append a collection of trends to each article
-module.exports = function(batch) {
-  collectWatsonTrends(batch, function(articlesWithTrends) {
-    console.log('articlesWithTrends: ', articlesWithTrends);
-
-    // Then for each article in that collection
-    // run through its newly collected trends
-    // and either add or update the trend table
-    // Then re-rank all Trends given the new information
-    incorporateAllNewTrends(articlesWithTrends, rankAllTrends);
-
-  });
-}
+// Then for each article in that collection
+// run through its newly collected trends
+// and either add or update the trend table
+// Then re-rank all Trends given the new information
+module.exports = collectWatsonTrends;
