@@ -30,7 +30,8 @@ var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
       var s = ms / 1000;
       var min = s / 60;
       var h = min / 60;
-      var rank = trendCount * Math.pow(1 - 0.5, h);
+      var d = h / 24;
+      var rank = trendCount * Math.pow(1 - 0.5, d);
       return rank;
     });
 

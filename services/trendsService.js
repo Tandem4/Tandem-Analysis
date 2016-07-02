@@ -109,7 +109,7 @@ var updateSingleTrend = function(existingTrend, articleId, doneCallback) {
 // Given a batch of articles with Trends that need to be added or updated
 var incorporateAllNewTrends = function (articlesModelsWithTrends, rankingCallback) {
   console.log("BEGINNING incorporateAllNewTrends");
-  // console.log('ARTICLES WITH TRENDS: ', articlesModelsWithTrends);
+  console.log('ARTICLES WITH TRENDS: ', articlesModelsWithTrends);
   db.Trends.fetch().then(function(allTrends) {
 
     // save the names of all existing trends into an array
