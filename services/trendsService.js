@@ -34,11 +34,11 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
       trends = parsedEntities.concat(parsedConcepts);
 
       articleObj.trends = _.uniq(trends);
-      console.log(articleObj);
+      // console.log(articleObj);
       // find the publication to which this article belongs
       db.Publication.where({pub_name: articleObj.pub_name}).fetch()
       .then( function(matchedPub) {
-        var pubId = matchedPub ? matchedPub.attributes._id : null;
+        var pubId = matchedPub ? matchedPub.attributes.id : null;
 
         // add our new article to the db before callback
         db.Article.forge({
@@ -57,8 +57,12 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
           "image_url": articleObj.image_url,
         }).save({ "pub_id": pubId })
 
-        .then( function() {
-          doneCallback(null, articleObj);
+        .then( function(articleModel) {
+
+          // pass trends from the articleObj to the Model before passing down the pipeline
+          articleModel.trends = articleObj.trends;
+
+          doneCallback(null, articleModel);
         });
       });
     });
@@ -82,9 +86,10 @@ var collectWatsonTrends = function(batch, callback) {
 // *********************************
 
 // Write a new trend record to the db
-var createSingleTrend = function(newTrend, doneCallback) {
+var createSingleTrend = function(newTrend, articleId, doneCallback) {
   db.Trend.forge({ 'trend_name': newTrend }).save()
   .then( function(trend) {
+    trend.articles().attach(articleId);
     doneCallback(null, true);
   }).catch( function(err) {
     console.log('There was an error in createSingleTrend: ', err);
@@ -92,9 +97,10 @@ var createSingleTrend = function(newTrend, doneCallback) {
 };
 
 // Update the updated_at field of an existing trend record
-var updateSingleTrend = function(existingTrend, doneCallback) {
+var updateSingleTrend = function(existingTrend, articleId, doneCallback) {
   db.Trend.where({trend_name: existingTrend}).save(null, {patch: true})
   .then( function(trend) {
+    trend.articles().attach(articleId);
     doneCallback(null, true);
   }).catch( function(err) {
     console.log('There was an error in updateSingleTrend: ', err);
@@ -102,9 +108,9 @@ var updateSingleTrend = function(existingTrend, doneCallback) {
 };
 
 // Given a batch of articles with Trends that need to be added or updated
-var incorporateAllNewTrends = function (articlesWithTrends, rankingCallback) {
+var incorporateAllNewTrends = function (articlesModelsWithTrends, rankingCallback) {
   console.log("BEGINNING incorporateAllNewTrends");
-  console.log('ARTICLES WITH TRENDS: ', articlesWithTrends);
+  // console.log('ARTICLES WITH TRENDS: ', articlesModelsWithTrends);
   db.Trends.fetch().then(function(allTrends) {
 
     // save the names of all existing trends into an array
@@ -113,15 +119,15 @@ var incorporateAllNewTrends = function (articlesWithTrends, rankingCallback) {
     });
 
     // for each article, for each trend within that article, update or create a trend record
-    async.each( articlesWithTrends,
+    async.each( articlesModelsWithTrends,
                 function(article, callback) {
 
                   async.each( article.trends,
                               function(singleTrend, callback) {
                                 if (_.contains(existingTrends, singleTrend)) {
-                                  updateSingleTrend(singleTrend, callback);
+                                  updateSingleTrend(singleTrend, article, callback);
                                 } else {
-                                  createSingleTrend(singleTrend, callback);
+                                  createSingleTrend(singleTrend, article, callback);
                                 }
                               },
                               function(err) {
