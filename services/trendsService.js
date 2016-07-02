@@ -3,7 +3,7 @@ const request = require('request');
 const db = require('tandem-db');
 const _ = require('underscore');
 const WATSON_API_KEY = process.env.TANDEM_API_KEY;
-const RELEVANCE = 0.5;
+const RELEVANCE = 0.6;
 
 // *********************************
 //  Watson Trend Analysis
@@ -33,16 +33,17 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
 
       trends = parsedEntities.concat(parsedConcepts);
 
-      articleObj.trends = _.uniq(trends)
-
+      articleObj.trends = _.uniq(trends);
+      console.log(articleObj);
       // find the publication to which this article belongs
       db.Publication.where({pub_name: articleObj.pub_name}).fetch()
       .then( function(matchedPub) {
+        var pubId = matchedPub ? matchedPub.attributes._id : null;
 
         // add our new article to the db before callback
         db.Article.forge({
-          "_id": '' + articleObj._id,
-          "title": articleObj.title,
+          // "_id": '' + articleObj._id,
+          "title": articleObj.title.slice(0, 255),
           "frequency_viewed": 0,
           "article_date": articleObj.article_date,
           "anger": articleObj.anger,
@@ -54,7 +55,7 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
           "article_summary": articleObj.article_summary,
           "article_url": articleObj.article_url,
           "image_url": articleObj.image_url,
-        }).save({"pub_id": null})
+        }).save({ "pub_id": pubId })
 
         .then( function() {
           doneCallback(null, articleObj);
@@ -65,11 +66,12 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
 };
 
 var collectWatsonTrends = function(batch, callback) {
-
+  console.log("BEGINNING collectWatsonTrends");
   async.map( batch,
              singleWatsonRequest,
              function(err, results){
                if (err) { console.log('An error occurred in collectWatsonTrends: ', err); }
+               console.log("BEGINNING incorporateAllNewTrends");
                incorporateAllNewTrends(results, callback);
              }
   );
@@ -101,7 +103,8 @@ var updateSingleTrend = function(existingTrend, doneCallback) {
 
 // Given a batch of articles with Trends that need to be added or updated
 var incorporateAllNewTrends = function (articlesWithTrends, rankingCallback) {
-
+  console.log("BEGINNING incorporateAllNewTrends");
+  console.log('ARTICLES WITH TRENDS: ', articlesWithTrends);
   db.Trends.fetch().then(function(allTrends) {
 
     // save the names of all existing trends into an array
@@ -129,6 +132,7 @@ var incorporateAllNewTrends = function (articlesWithTrends, rankingCallback) {
                 },
                 function(err){
                   if (err) { console.log('There was an error: ', err); }
+                  console.log("ENDING collectWatsonTrends");
                   rankingCallback();
                 }
     );

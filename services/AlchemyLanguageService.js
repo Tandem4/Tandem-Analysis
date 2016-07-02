@@ -7,6 +7,10 @@ var ALCHEMY_KEY   = process.env.TANDEM_ALCHEMY_KEY;
 var AlchemyAPI    = require('alchemy-api');
 var Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
 
+// *********************************
+//  Alchemy Sentiment Analysis
+// *********************************
+
 var singleAlchemyRequest = function(row, callback) {
 
 	var queryString = "?url=" +
@@ -56,11 +60,12 @@ var singleAlchemyRequest = function(row, callback) {
 	}
 
 var allAlchemyRequests = function(batch, callback) {
-
+  console.log("BEGINNING allAlchemyRequests");
 	async.map( batch,
 		         singleAlchemyRequest,
 		         function (err, results) {
 	             if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }
+	             console.log("FINISHING allAlchemyRequests");
 	             callback(results);
 	           });
 };

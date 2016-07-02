@@ -7,10 +7,11 @@ module.exports = function(callback) {
 
   mongoBluebird.connect(TANDEM_MONGO_HOST).then( function(db) {
 
-    return db.collection('news').find()
+    return db.collection('newnews').find()
     .then(function(rawArticleBatch) {
-      var oneArticle = rawArticleBatch.slice(0,1);
-      callback(oneArticle);
+      // db.collection('news').remove( { } );
+      var articles = rawArticleBatch.slice(0,10);
+      callback(articles);
     })
     .catch(function(err) {
       console.log("An error occured in mongoFetch", err);

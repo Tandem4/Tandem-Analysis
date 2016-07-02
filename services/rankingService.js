@@ -21,7 +21,7 @@ var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
 };
 
 var rankAllTrends = function() {
-
+  console.log("BEGINNING rankAllTrends");
   db.Trends.fetch().then( function(allTrends) {
     var trendCount = allTrends.length;
     var currentTime = Date.now();
@@ -31,6 +31,7 @@ var rankAllTrends = function() {
 
               // close the database connection when finished
               function() {
+                console.log("ENDING rankAllTrends");
                 db.db.knex.destroy();
               }
     );
