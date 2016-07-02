@@ -10,7 +10,7 @@ module.exports = function(callback) {
     return db.collection('newnews').find()
     .then(function(rawArticleBatch) {
       // db.collection('news').remove( { } );
-      var articles = rawArticleBatch.slice(0,10);
+      var articles = rawArticleBatch.slice(0,100);
       callback(articles);
     })
     .catch(function(err) {

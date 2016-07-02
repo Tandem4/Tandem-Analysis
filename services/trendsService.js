@@ -11,11 +11,11 @@ const RELEVANCE = 0.6;
 
 // helper method for singleWatsonRequest
 var filterResults = function(results, prop) {
-  return results[prop].filter( function(item) {
+  return results[prop] && results[prop].filter( function(item) {
     return parseFloat(item.relevance) > RELEVANCE;
   }).map( function(filtered) {
     return filtered.text.toLowerCase();
-  });
+  }) || [];
 };
 
 var singleWatsonRequest = function(articleObj, doneCallback) {
@@ -34,7 +34,7 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
       trends = parsedEntities.concat(parsedConcepts);
 
       articleObj.trends = _.uniq(trends);
-      // console.log(articleObj);
+
       // find the publication to which this article belongs
       db.Publication.where({pub_name: articleObj.pub_name}).fetch()
       .then( function(matchedPub) {
@@ -42,7 +42,6 @@ var singleWatsonRequest = function(articleObj, doneCallback) {
 
         // add our new article to the db before callback
         db.Article.forge({
-          // "_id": '' + articleObj._id,
           "title": articleObj.title.slice(0, 255),
           "frequency_viewed": 0,
           "article_date": articleObj.article_date,
