@@ -23,7 +23,7 @@
     "mongodb": "^2.1.18",
     "mongodb-bluebird": "^0.1.1",
     "request": "^2.72.0",
-    "tandem-db": "^1.0.12",
+    "tandem-db": "^1.0.13",
     "underscore": "^1.8.3"
   }
 }

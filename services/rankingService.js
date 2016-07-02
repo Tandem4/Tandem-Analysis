@@ -38,6 +38,8 @@ var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
       return memo + next;
     }, 0);
 
+    console.log('calculated rank: ', sum);
+
     // Cross-publication articles should be of a higher value than articles originating from the same publication
     sum *= publications.length * 1.25;
 
