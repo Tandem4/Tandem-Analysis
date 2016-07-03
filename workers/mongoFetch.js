@@ -18,24 +18,27 @@ module.exports = function(callback) {
       // var articles = rawArticleBatch.slice(0,20);
       var articles = rawArticleBatch.slice(0,5);
       console.log(articles);
+
       // query the database and drop specifically these 20
       async.each(articles,
-                 function(article, callback) {
+                 function(article, doneCallback) {
                     db.collection('newnews').remove(article)
                     .then(function() {
-                      callback();
+                      doneCallback();
                     });
                   },
                   function() {
                     callback(articles);
+
+                    // close the database connection when finished
                     db.close();
                   }
       );
     })
     .catch(function(err) {
       console.log("An error occured in mongoFetch", err);
-    })
+    });
 
-  })
+  });
 
 }

@@ -1,4 +1,4 @@
-var async = require('async');
+var async   = require('async');
 var request = require('request');
 
 var SENTIMENT_URL = process.env.WATSON_SENTIMENT_URL;
@@ -11,15 +11,15 @@ var Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
 //  Alchemy Sentiment Analysis
 // *********************************
 
-var singleAlchemyRequest = function(row, callback) {
+var singleAlchemyRequest = function(article, callback) {
 
 	var queryString = "?url=" +
-            row.article_url +
+            article.article_url +
 	               "&apikey=" +
 	              ALCHEMY_KEY +
 	        "&outputMode=json";
 
-	var dataObj = row;
+	var dataObj = article;
 
 		request(EMOTION_URL + queryString, function (error, response, body1) {
 			if(error) {
@@ -33,7 +33,7 @@ var singleAlchemyRequest = function(row, callback) {
 	          dataObj['fear'] = filteredData_E.docEmotions['fear'] * 100;
 	          dataObj['joy'] = filteredData_E.docEmotions['joy'] * 100;
 	          dataObj['sadness'] = filteredData_E.docEmotions['sadness'] * 100;
-	          dataObj['_id'] = row._id;
+	          // dataObj['_id'] = article._id;
 				} else {
 					console.log('failed to ping docEmotions proper-like', filteredData_E);
 				}
@@ -47,7 +47,7 @@ var singleAlchemyRequest = function(row, callback) {
 				  	if ( filteredData_S.docSentiment ) {
 								dataObj['score'] = filteredData_S.docSentiment['score'] * 100;
 								dataObj['type'] = filteredData_S.docSentiment['type'];;
-		            dataObj['_id'] = row._id;
+		            // dataObj['_id'] = article._id;
 				    } else {
 				    	console.log('failed to ping docSentiment proper-like');
 				    }

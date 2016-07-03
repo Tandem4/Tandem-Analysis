@@ -1,5 +1,5 @@
 var mongoFetch       = require('./workers/mongoFetch.js');
-var sentimentService = require('./services/AlchemyLanguageService.js');
+var sentimentService = require('./services/sentimentService.js');
 var trendsService    = require('./services/trendsService.js');
 var rankingService   = require('./services/rankingService.js');
 

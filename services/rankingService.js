@@ -26,13 +26,13 @@ var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
       //  Exponential Decay:  y = a(1 - r)^t
       //  rank = initialAmount * Math.pow(1 - decayRate, timePassed);
       //  use 24hrs as our time unit
-      var ms = currentTime - Date.parse(article.article_date);
-      var s = ms / 1000;
-      var min = s / 60;
-      var h = min / 60;
-      var d = h / 24;
-      var rank = trendCount * Math.pow(1 - 0.5, d);
-      return rank;
+      var ms   = currentTime - Date.parse(article.article_date);
+      var s    = ms / 1000;
+      var min  = s / 60;
+      var h    = min / 60;
+      var d    = h / 24;
+
+      return trendCount * Math.pow(1 - 0.5, d);
     });
 
     var sum = ranks.reduce( function(memo, next) {
@@ -42,7 +42,7 @@ var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
     console.log('calculated rank: ', sum);
 
     // Cross-publication articles should be of a higher value than articles originating from the same publication
-    sum *= publications.length * 1.25;
+    sum *= (publications.length * .25);
 
     db.Trend.where({id: trend.attributes.id}).save({rank: sum || null}, {patch: true})
     .then(function (trend) {
