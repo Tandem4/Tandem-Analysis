@@ -2,6 +2,8 @@ const async = require('async');
 const db    = require('tandem-db');
 
 var rankAllTrends = function(trendCache, finalCallback) {
+  console.log("Beginning rankAllTrends with ", trendCache);
+
   var trendCount = Object.keys(trendCache).length;
   var currentTime = Date.now();
 
@@ -16,6 +18,7 @@ var rankAllTrends = function(trendCache, finalCallback) {
   );
 };
 
+// for all trends new and existing, compute a rank based on attributes of the articles associated with it
 var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
 
   // ensure that either version of the conditional completes before moving on to calculateRank
@@ -36,6 +39,8 @@ var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
       },
 
     function(err, rank) {
+      console.log("Calculated rank " + rank + " for trend ", trend);
+
       db.Trend.where({id: trend.id}).save({rank: rank || null}, {patch: true})
       .then( function(trend) {
         doneCallback(err, trend);
@@ -43,7 +48,7 @@ var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
   });
 };
 
-// helper method for rankSingleTrend
+// helper method for rankSingleTrend conditional
 var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) {
 
   db.Trend.forge({ 'trend_name': trend.trend_name }).save()
@@ -53,14 +58,15 @@ var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) 
     trend.id = trendModel.attributes.id;
 
     // create an entry in the join table
-    if (trend.article_id) {
-      trendModel.articles().attach(trend.article_id);
-    }
+    trend.article_ids.forEach( function(article_id) {
+      trendModel.articles().attach(article_id);
+    });
+
     calculateRank(trendCount, currentTime, trend, doneCallback);
   });
 };
 
-// a simple wrapper for else case
+// a simple wrapper for else case in rankSingleTrend conditional
 var passThru = function(trendCount, currentTime, trend, doneCallback) {
   calculateRank(trendCount, currentTime, trend, doneCallback);
 }

@@ -14,6 +14,7 @@ const Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
 var allSentimentRequests = function(batch, trendsCallback) {
 
 	async.map( batch,
+
 		         singleSentimentRequest,
 		         function (err, results) {
 	             if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }

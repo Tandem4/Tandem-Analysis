@@ -15,6 +15,7 @@ mongoFetch( function(rawData) {
 
       // Re-rank all trends to incorporate new data
       rankingService(trendCache, function() {
+        console.log("Completed Analysis Service.");
 
         // close the MySQL connection when finished
         db.db.knex.destroy();

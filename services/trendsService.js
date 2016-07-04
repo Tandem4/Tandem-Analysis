@@ -12,7 +12,7 @@ const RELEVANCE      = 0.6;
 // *********************************
 
 var collectAllTrends = function(batch, rankingCallback) {
-  console.log("BEGINNING collectAllTrends with ", batch);
+  console.log("Beginning collectAllTrends with ", batch);
 
   db.Publications.fetch().then( function(allPubs) {
 
@@ -71,7 +71,7 @@ var singleTrendRequest = function(pubData, articleObj, doneCallback) {
         "joy"             : articleObj.joy,
         "sadness"         : articleObj.sadness,
         "type"            : articleObj.type,
-        // "score"           : articleObj.score,
+        "score"           : articleObj.score,
         "article_summary" : articleObj.article_summary,
         "article_url"     : articleObj.article_url,
         "image_url"       : articleObj.image_url,
@@ -107,7 +107,7 @@ var filterResults = function(results, prop) {
 
 // Given a batch of ArticleModels with Trends that need to be added or updated, passed down from collectAllTrends
 var incorporateAllNewTrends = function (articleModelsWithTrends, rankingCallback) {
-  console.log("BEGINNING incorporateAllNewTrends");
+  console.log("Beginning incorporateAllNewTrends with ", articleModelsWithTrends);
 
   // query the db for existing trends and create a cache, then add the new trends to the cache
   db.Trends.fetch().then(function(allTrends) {
@@ -122,12 +122,30 @@ var incorporateAllNewTrends = function (articleModelsWithTrends, rankingCallback
     articleModelsWithTrends.forEach( function(article) {
 
       for (var prop in article.trends) {
-        trendCache[prop] = {
-          trend_name: prop,
-          rank: null,
 
-          // article_id is just for join table, will be discarded later
-          article_id: article.trends[prop]
+        // if the trend already exists in the cache,
+        if (trendCache[prop]) {
+
+          // if applicable, remove its id indicator for later identification by rankSingleTrend
+          if (trendCache[prop].id) {
+            delete trendCache.id;
+          }
+
+        // else if it's brand new, establish a new trend object at that property
+        } else {
+          trendCache[prop] = {
+            trend_name: prop,
+            rank      : null
+          };
+        }
+
+        // if there are preexisting article associations, append this one to the list
+        if (trendCache[prop].article_ids) {
+          trendCache[prop].article_ids.push(article.trends[prop]);
+
+        // else establish the article association array with this as the first entry
+        } else {
+          trendCache[prop].article_ids = [article.trends[prop]];
         }
       }
     });
