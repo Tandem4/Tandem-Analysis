@@ -1,17 +1,29 @@
-var async   = require('async');
-var request = require('request');
+const async   = require('async');
+const request = require('request');
 
-var SENTIMENT_URL = process.env.WATSON_SENTIMENT_URL;
-var EMOTION_URL   = process.env.WATSON_EMOTION_URL;
-var ALCHEMY_KEY   = process.env.TANDEM_ALCHEMY_KEY;
-var AlchemyAPI    = require('alchemy-api');
-var Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
+const SENTIMENT_URL = process.env.WATSON_SENTIMENT_URL;
+const EMOTION_URL   = process.env.WATSON_EMOTION_URL;
+const ALCHEMY_KEY   = process.env.TANDEM_ALCHEMY_KEY;
+const AlchemyAPI    = require('alchemy-api');
+const Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
 
 // *********************************
-//  Alchemy Sentiment Analysis
+//  Watson Sentiment Analysis
 // *********************************
 
-var singleAlchemyRequest = function(article, callback) {
+var allSentimentRequests = function(batch, trendsCallback) {
+
+	async.map( batch,
+		         singleSentimentRequest,
+		         function (err, results) {
+	             if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }
+
+	             trendsCallback(results);
+	           });
+};
+
+// Decorator function to append watson sentiment data to article
+var singleSentimentRequest = function(article, doneCallback) {
 
 	var queryString = "?url=" +
             article.article_url +
@@ -19,7 +31,6 @@ var singleAlchemyRequest = function(article, callback) {
 	              ALCHEMY_KEY +
 	        "&outputMode=json";
 
-	var dataObj = article;
 
 		request(EMOTION_URL + queryString, function (error, response, body1) {
 			if(error) {
@@ -28,12 +39,11 @@ var singleAlchemyRequest = function(article, callback) {
 				var filteredData_E = JSON.parse(body1);
 				var emotionObj = {};
 				if ( filteredData_E.docEmotions ) {
-	          dataObj['anger'] = filteredData_E.docEmotions['anger'] * 100;
-	          dataObj['disgust'] = filteredData_E.docEmotions['disgust'] * 100;
-	          dataObj['fear'] = filteredData_E.docEmotions['fear'] * 100;
-	          dataObj['joy'] = filteredData_E.docEmotions['joy'] * 100;
-	          dataObj['sadness'] = filteredData_E.docEmotions['sadness'] * 100;
-	          // dataObj['_id'] = article._id;
+	          article['anger'] = filteredData_E.docEmotions['anger'] * 100;
+	          article['disgust'] = filteredData_E.docEmotions['disgust'] * 100;
+	          article['fear'] = filteredData_E.docEmotions['fear'] * 100;
+	          article['joy'] = filteredData_E.docEmotions['joy'] * 100;
+	          article['sadness'] = filteredData_E.docEmotions['sadness'] * 100;
 				} else {
 					console.log('failed to ping docEmotions proper-like', filteredData_E);
 				}
@@ -45,29 +55,18 @@ var singleAlchemyRequest = function(article, callback) {
 					  var filteredData_S = JSON.parse(body2);
 					  var sentimentObj = {};
 				  	if ( filteredData_S.docSentiment ) {
-								dataObj['score'] = filteredData_S.docSentiment['score'] * 100;
-								dataObj['type'] = filteredData_S.docSentiment['type'];;
-		            // dataObj['_id'] = article._id;
+
+								article['score'] = filteredData_S.docSentiment['score'] * 100;
+								article['type'] = filteredData_S.docSentiment['type'];;
 				    } else {
 				    	console.log('failed to ping docSentiment proper-like');
 				    }
 				  }
 
-			    callback(null, dataObj);
+			    doneCallback(null, article);
 				});
       }
 	  });
-	}
-
-var allAlchemyRequests = function(batch, callback) {
-  console.log("BEGINNING allAlchemyRequests");
-	async.map( batch,
-		         singleAlchemyRequest,
-		         function (err, results) {
-	             if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }
-	             console.log("FINISHING allAlchemyRequests");
-	             callback(results);
-	           });
 };
 
-module.exports = allAlchemyRequests;
+module.exports = allSentimentRequests;

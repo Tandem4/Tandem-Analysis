@@ -1,14 +1,16 @@
-var TANDEM_MONGO_HOST = process.env.TANDEM_MONGO_HOST;
-var mongo             = require('mongodb');
-var bluebird          = require('bluebird');
-var mongoBluebird     = require('mongodb-bluebird');
-var async             = require('async');
+const TANDEM_MONGO_HOST = process.env.TANDEM_MONGO_HOST;
+const mongo             = require('mongodb');
+const bluebird          = require('bluebird');
+const mongoBluebird     = require('mongodb-bluebird');
+const async             = require('async');
 
-module.exports = function(callback) {
+const mongoCollection = 'news';
+
+module.exports = function(sentimentCallback) {
 
   mongoBluebird.connect(TANDEM_MONGO_HOST).then( function(db) {
 
-    return db.collection('newnews').find()
+    return db.collection(mongoCollection).find()
     .then(function(rawArticleBatch) {
 
       // only send thru the first 20 articles each hour:
@@ -16,21 +18,22 @@ module.exports = function(callback) {
       // each article uses 4 queries (split between 2 api keys, = 500 requests/day)
       // 20 per hour = 480 requests per day
       // var articles = rawArticleBatch.slice(0,20);
-      var articles = rawArticleBatch.slice(0,5);
-      console.log(articles);
+      var articles = rawArticleBatch.slice(0,1);
 
-      // query the database and drop specifically these 20
+      // query mongo and drop specifically these 20
       async.each(articles,
+
                  function(article, doneCallback) {
-                    db.collection('newnews').remove(article)
+                    db.collection(mongoCollection).remove(article)
                     .then(function() {
                       doneCallback();
                     });
                   },
-                  function() {
-                    callback(articles);
 
-                    // close the database connection when finished
+                  function() {
+                    sentimentCallback(articles);
+
+                    // close the mongo connection when finished
                     db.close();
                   }
       );
@@ -38,7 +41,5 @@ module.exports = function(callback) {
     .catch(function(err) {
       console.log("An error occured in mongoFetch", err);
     });
-
   });
-
 }

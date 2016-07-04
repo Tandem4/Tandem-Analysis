@@ -1,9 +1,7 @@
 const async   = require('async');
 const request = require('request');
 const db      = require('tandem-db');
-const _       = require('underscore');
 
-// refactor for url + query string
 const ENTITY_URL     = process.env.ENTITY_URL;
 const CONCEPT_URL    = process.env.CONCEPT_URL;
 const WATSON_API_KEY = process.env.TANDEM_API_KEY;
@@ -13,17 +11,35 @@ const RELEVANCE      = 0.6;
 //  Watson Trend Analysis
 // *********************************
 
-// helper method for singleTrendRequest
-var filterResults = function(results, prop) {
-  return results[prop] && results[prop].filter( function(item) {
-    return parseFloat(item.relevance) > RELEVANCE;
-  }).map( function(filtered) {
-    return filtered.text.toLowerCase();
-  }) || [];
+var collectAllTrends = function(batch, rankingCallback) {
+  console.log("BEGINNING collectAllTrends with ", batch);
+
+  db.Publications.fetch().then( function(allPubs) {
+
+    // create a dictionary of all publications in advance to pass down to iterator
+    var pubData = allPubs.models.reduce( function (memo, nextModel) {
+      memo[nextModel.attributes.pub_name] = nextModel.attributes.id;
+      return memo;
+    }, {});
+
+    // for each article in this batch, append trend keywords and transfer to incorporateAllNewTrends
+    async.map( batch,
+
+               singleTrendRequest.bind(null, pubData),
+
+               function(err, articleModelsWithTrends){
+                 if (err) { console.log('An error occurred in collectAllTrends: ', err); }
+                 incorporateAllNewTrends(articleModelsWithTrends, rankingCallback);
+               }
+    );
+  }).catch( function(err) {
+    console.log('Something went wrong in collectAllTrends', err);
+  });
 };
 
+// Decorator function to append watson trend data to article
 var singleTrendRequest = function(pubData, articleObj, doneCallback) {
-  var parsedEntities, parsedConcepts, trends;
+  var parsedEntities, parsedConcepts, trendsArr, trendsObj, pubId;
 
   var queryString =    '?apikey=' +
                    WATSON_API_KEY +
@@ -40,18 +56,14 @@ var singleTrendRequest = function(pubData, articleObj, doneCallback) {
       if (err) { console.log('An error occurred in singleTrendRequest: ', err); }
 
       parsedConcepts = filterResults(JSON.parse(body), 'concepts');
+      trendsArr = parsedEntities.concat(parsedConcepts);
 
-      trends = parsedEntities.concat(parsedConcepts);
-
-      articleObj.trends = _.uniq(trends);
-
-      // find the publication id to which this article belongs
-      var pubId = pubData[articleObj.pub_name];
+      // find the publication id to which this article belongs for foreign key
+      pubId = pubData[articleObj.pub_name] || null;
 
       // save our new article to the db before callback
       db.Article.forge({
         "title"           : articleObj.title.slice(0, 255),
-        "frequency_viewed": 0,
         "article_date"    : articleObj.article_date,
         "anger"           : articleObj.anger,
         "disgust"         : articleObj.disgust,
@@ -59,15 +71,23 @@ var singleTrendRequest = function(pubData, articleObj, doneCallback) {
         "joy"             : articleObj.joy,
         "sadness"         : articleObj.sadness,
         "type"            : articleObj.type,
+        // "score"           : articleObj.score,
         "article_summary" : articleObj.article_summary,
         "article_url"     : articleObj.article_url,
         "image_url"       : articleObj.image_url,
+        "frequency_viewed": 0
       }).save({ "pub_id": pubId })
 
       .then( function(articleModel) {
 
-        // pass trends from the articleObj to the Model before passing down the pipeline
-        articleModel.trends = articleObj.trends;
+        // transfer trends to obj to remove potential duplicates and also associate w/ this article's id
+        trendsObj = {};
+        trendsArr.forEach( function(trend) {
+          trendsObj[trend] = articleModel.attributes.id;
+        });
+
+        // append these trends to the returned Article Model before passing back to collectAllTrends
+        articleModel.trends = trendsObj;
 
         doneCallback(null, articleModel);
       });
@@ -75,91 +95,44 @@ var singleTrendRequest = function(pubData, articleObj, doneCallback) {
   });
 };
 
-var collectAllTrends = function(batch, callback) {
-  console.log("BEGINNING collectAllTrends");
+// helper method for singleTrendRequest
+var filterResults = function(results, prop) {
+  return results[prop] && results[prop].filter( function(item) {
+    return parseFloat(item.relevance) > RELEVANCE;
+  }).map( function(filtered) {
+    return filtered.text.toLowerCase();
+  }) || [];
+};
 
-  // fetch and map all publications in advance to pass down to iterator
-  db.Publications.fetch().then( function(allPubs) {
 
-    var pubData = allPubs.models.reduce( function (memo, nextModel) {
-      memo[nextModel.pub_name] = nextModel.id;
+// Given a batch of ArticleModels with Trends that need to be added or updated, passed down from collectAllTrends
+var incorporateAllNewTrends = function (articleModelsWithTrends, rankingCallback) {
+  console.log("BEGINNING incorporateAllNewTrends");
+
+  // query the db for existing trends and create a cache, then add the new trends to the cache
+  db.Trends.fetch().then(function(allTrends) {
+
+    // cache: lookup by trend_name
+    var trendCache = allTrends.models.reduce( function(memo, nextModel) {
+      memo[nextModel.attributes.trend_name] = nextModel.attributes;
       return memo;
     }, {});
 
-    async.map( batch,
-               singleTrendRequest.bind(null, pubData),
-               function(err, results){
-                 if (err) { console.log('An error occurred in collectAllTrends: ', err); }
-                 console.log("BEGINNING incorporateAllNewTrends");
-                 incorporateAllNewTrends(results, callback);
-               }
-    );
-  }).catch( function(err) {
-    console.log('Something went wrong in collectAllTrends', err);
-  });
-};
+    // add all new trends to the trendCache
+    articleModelsWithTrends.forEach( function(article) {
 
-// *********************************
-//  Update Trends Table
-// *********************************
+      for (var prop in article.trends) {
+        trendCache[prop] = {
+          trend_name: prop,
+          rank: null,
 
-// Write a new trend record to the db
-var createSingleTrend = function(newTrend, articleId, doneCallback) {
-  db.Trend.forge({ 'trend_name': newTrend }).save()
-  .then( function(trend) {
-    trend.articles().attach(articleId);
-    doneCallback(null, true);
-  }).catch( function(err) {
-    console.log('There was an error in createSingleTrend: ', err);
-  });
-};
-
-// Update the updated_at field of an existing trend record
-var updateSingleTrend = function(existingTrend, articleId, doneCallback) {
-  db.Trend.where({trend_name: existingTrend}).save(null, {patch: true})
-  .then( function(trend) {
-    trend.articles().attach(articleId);
-    doneCallback(null, true);
-  }).catch( function(err) {
-    console.log('There was an error in updateSingleTrend: ', err);
-  });
-};
-
-// Given a batch of articles with Trends that need to be added or updated
-var incorporateAllNewTrends = function (articlesModelsWithTrends, rankingCallback) {
-  console.log("BEGINNING incorporateAllNewTrends");
-  console.log('ARTICLES WITH TRENDS: ', articlesModelsWithTrends);
-  db.Trends.fetch().then(function(allTrends) {
-
-    // save the names of all existing trends into an array
-    var existingTrends = allTrends.models.map( function(model) {
-      return model.attributes.trend_name;
+          // article_id is just for join table, will be discarded later
+          article_id: article.trends[prop]
+        }
+      }
     });
 
-    // for each article, for each trend within that article, update or create a trend record
-    async.each( articlesModelsWithTrends,
-                function(article, callback) {
-
-                  async.each( article.trends,
-                              function(singleTrend, callback) {
-                                if (_.contains(existingTrends, singleTrend)) {
-                                  updateSingleTrend(singleTrend, article, callback);
-                                } else {
-                                  createSingleTrend(singleTrend, article, callback);
-                                }
-                              },
-                              function(err) {
-                                if (err) { console.log('An error occurred in incorporateAllNewTrends: ', err); }
-                                callback();
-                              }
-                  );
-                },
-                function(err){
-                  if (err) { console.log('There was an error: ', err); }
-                  console.log("ENDING collectAllTrends");
-                  rankingCallback();
-                }
-    );
+    rankingCallback(trendCache);
   });
 };
 

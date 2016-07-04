@@ -1,27 +1,91 @@
 const async = require('async');
-const db = require('tandem-db');
-const _ = require('underscore');
+const db    = require('tandem-db');
 
-var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
+var rankAllTrends = function(trendCache, finalCallback) {
+  var trendCount = Object.keys(trendCache).length;
+  var currentTime = Date.now();
 
-  // 1) Pull the dates of all articles associated with that trend, also publication id
+  async.each(trendCache,
+
+            rankSingleTrend.bind(null, trendCount, currentTime),
+
+            function(err) {
+              if (err) { console.log("An error occurred in rankAllTrends: ", err); }
+              finalCallback();
+            }
+  );
+};
+
+var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
+
+  // ensure that either version of the conditional completes before moving on to calculateRank
+  async.map( [trend],
+
+      // pass trend to calculateRank via this wrapper function
+      // conditionally executes createTrendAndSave if necessary, otherwise just passes thru to calculateRank
+      function(trend, doneCallback) {
+
+        // if true, it's an existing trend
+        if (!!trend.id) {
+          passThru(trendCount, currentTime, trend, doneCallback);
+
+        // if false, it's a new trend
+        } else {
+          createTrendAndSave(trendCount, currentTime, trend, doneCallback);
+        }
+      },
+
+    function(err, rank) {
+      db.Trend.where({id: trend.id}).save({rank: rank || null}, {patch: true})
+      .then( function(trend) {
+        doneCallback(err, trend);
+      });
+  });
+};
+
+// helper method for rankSingleTrend
+var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) {
+
+  db.Trend.forge({ 'trend_name': trend.trend_name }).save()
+  .then( function(trendModel) {
+
+    // grab the id from the newly created trend model
+    trend.id = trendModel.attributes.id;
+
+    // create an entry in the join table
+    if (trend.article_id) {
+      trendModel.articles().attach(trend.article_id);
+    }
+    calculateRank(trendCount, currentTime, trend, doneCallback);
+  });
+};
+
+// a simple wrapper for else case
+var passThru = function(trendCount, currentTime, trend, doneCallback) {
+  calculateRank(trendCount, currentTime, trend, doneCallback);
+}
+
+// helper method for rankSingleTrend
+var calculateRank = function(trendCount, currentTime, trend, doneCallback) {
+
+  // Pull the dates and pub_id of all articles associated with this trend
   db.Trend.where('id', trend.id).fetch({withRelated: ['articles']})
   .then( function(results) {
+
     var articlesForThisTrend = results.relations.articles.models.map( function(article) {
       return {
         pub_id: article.attributes.pub_id,
         article_date: article.attributes.article_date
       };
     });
-    console.log('ARTICLES FOR THIS TREND: ', articlesForThisTrend.length, articlesForThisTrend);
 
-    var publications = [];
+    var publications = {};
 
+    // create a ranking value for each article within this trend, then sum them
     var ranks = articlesForThisTrend.map( function(article) {
 
-      if (!_.contains(publications, article.pub_id)) {
-        publications.push(article.pub_id);
-      }
+      // this will combine duplicates publications, if any
+      publications[article.pub_id] = true;
 
       //  Exponential Decay:  y = a(1 - r)^t
       //  rank = initialAmount * Math.pow(1 - decayRate, timePassed);
@@ -39,36 +103,10 @@ var rankSingleTrend = function(trendCount, currentTime, trend, callback) {
       return memo + next;
     }, 0);
 
-    console.log('calculated rank: ', sum);
-
     // Cross-publication articles should be of a higher value than articles originating from the same publication
-    sum *= (publications.length * .25);
+    sum *= (Object.keys(publications).length * .25);
 
-    db.Trend.where({id: trend.attributes.id}).save({rank: sum || null}, {patch: true})
-    .then(function (trend) {
-      callback();
-    }).catch( function(err) {
-      console.log('There was an error in rankSingleTrend: ', err);
-    });
-
-  });
-};
-
-var rankAllTrends = function() {
-  console.log("BEGINNING rankAllTrends");
-  db.Trends.fetch().then( function(allTrends) {
-    var trendCount = allTrends.length;
-    var currentTime = Date.now();
-
-    async.map(allTrends.models,
-              rankSingleTrend.bind(null, trendCount, currentTime),
-
-              // close the database connection when finished
-              function() {
-                console.log("ENDING rankAllTrends");
-                db.db.knex.destroy();
-              }
-    );
+    doneCallback(null, sum);
   });
 };
 
