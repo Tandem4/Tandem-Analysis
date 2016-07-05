@@ -4,7 +4,7 @@ const bluebird          = require('bluebird');
 const mongoBluebird     = require('mongodb-bluebird');
 const async             = require('async');
 
-const mongoCollection = 'news';
+const mongoCollection = 'newnews';
 
 module.exports = function(sentimentCallback) {
 
@@ -17,15 +17,7 @@ module.exports = function(sentimentCallback) {
       // 1000 requests/per day
       // each article uses 4 queries (split between 2 api keys, = 500 requests/day)
       // 20 per hour = 480 requests per day
-      // var articles = rawArticleBatch.slice(0,20);
-      var articles = rawArticleBatch.slice(0,1);
-
-      for (var i = 0; i < 2; i++) {
-        articles.push(articles[0]);
-      }
-
-      // TODO:  for testing: generate duplicates of array for overlap
-      console.log("fetched from Mongo: ", articles);
+      var articles = rawArticleBatch.slice(0,20);
 
       // query mongo and drop specifically these 20
       async.each(articles,
