@@ -2,7 +2,7 @@ const async = require('async');
 const db    = require('tandem-db');
 
 var rankAllTrends = function(trendCache, finalCallback) {
-  console.log("Beginning rankAllTrends with ", trendCache);
+  // console.log("Beginning rankAllTrends with ", trendCache);
 
   var trendCount = Object.keys(trendCache).length;
   var currentTime = Date.now();
@@ -30,7 +30,7 @@ var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
 
         // if true, it's an existing trend
         if (!!trend.id) {
-          passThru(trendCount, currentTime, trend, doneCallback);
+          checkForUpdates(trendCount, currentTime, trend, doneCallback);
 
         // if false, it's a new trend
         } else {
@@ -39,7 +39,7 @@ var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
       },
 
     function(err, rank) {
-      console.log("Calculated rank " + rank + " for trend ", trend);
+      // console.log("Calculated rank " + rank + " for trend ", trend);
 
       db.Trend.where({id: trend.id}).save({rank: rank || null}, {patch: true})
       .then( function(trend) {
@@ -50,7 +50,7 @@ var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
 
 // helper method for rankSingleTrend conditional
 var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) {
-
+  console.log("CREATING A NEW TREND RECORD FOR ", trend);
   db.Trend.forge({ 'trend_name': trend.trend_name }).save()
   .then( function(trendModel) {
 
@@ -66,9 +66,37 @@ var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) 
   });
 };
 
-// a simple wrapper for else case in rankSingleTrend conditional
-var passThru = function(trendCount, currentTime, trend, doneCallback) {
-  calculateRank(trendCount, currentTime, trend, doneCallback);
+// check whether an existing trend has new articles to add
+var checkForUpdates = function(trendCount, currentTime, trend, doneCallback) {
+  console.log("CHECKING FOR UPDATES ", trend);
+
+  // if there are new articles to add, fetch the Trend model to create a join table entry
+  if (trend.article_ids) {
+    db.Trend.forge({ 'id': trend.id }).fetch()
+    .then( function(trendModel) {
+      console.log("FETCHED ", trendModel)
+
+      async.each(trend.article_ids,
+
+                // create an entry in the join table for each article in the list
+                function(article_id, callback) {
+                  trendModel.articles().attach(article_id)
+                  .then(function() {
+                    callback();
+                  });
+                },
+
+                // then recalculate rank
+                function() {
+                  calculateRank(trendCount, currentTime, trend, doneCallback);
+                }
+      );
+    });
+
+  //  otherwise just recalculate rank
+  } else {
+    calculateRank(trendCount, currentTime, trend, doneCallback);
+  }
 }
 
 // helper method for rankSingleTrend
