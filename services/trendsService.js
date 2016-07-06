@@ -12,7 +12,7 @@ const RELEVANCE      = 0.6;
 // *********************************
 
 var collectAllTrends = function(batch, rankingCallback) {
-  console.log("Beginning collectAllTrends with ", batch);
+  // console.log("Beginning collectAllTrends with ", batch);
 
   db.Publications.fetch().then( function(allPubs) {
 
@@ -88,6 +88,7 @@ var singleTrendRequest = function(pubData, articleObj, doneCallback) {
 
         // append these trends to the returned Article Model before passing back to collectAllTrends
         articleModel.trends = trendsObj;
+        console.log("NEW TRENDS for one article: ", trendsObj);
 
         doneCallback(null, articleModel);
       });
@@ -107,7 +108,7 @@ var filterResults = function(results, prop) {
 
 // Given a batch of ArticleModels with Trends that need to be added or updated, passed down from collectAllTrends
 var incorporateAllNewTrends = function (articleModelsWithTrends, rankingCallback) {
-  console.log("Beginning incorporateAllNewTrends with ", articleModelsWithTrends);
+  // console.log("Beginning incorporateAllNewTrends with ", articleModelsWithTrends);
 
   // query the db for existing trends and create a cache, then add the new trends to the cache
   db.Trends.fetch().then(function(allTrends) {
@@ -124,15 +125,7 @@ var incorporateAllNewTrends = function (articleModelsWithTrends, rankingCallback
       for (var prop in article.trends) {
 
         // if the trend already exists in the cache,
-        if (trendCache[prop]) {
-
-          // if applicable, remove its id indicator for later identification by rankSingleTrend
-          if (trendCache[prop].id) {
-            delete trendCache.id;
-          }
-
-        // else if it's brand new, establish a new trend object at that property
-        } else {
+        if (!trendCache[prop]) {
           trendCache[prop] = {
             trend_name: prop,
             rank      : null
