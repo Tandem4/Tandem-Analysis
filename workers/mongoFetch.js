@@ -13,11 +13,7 @@ module.exports = function(sentimentCallback) {
     return db.collection(mongoCollection).find()
     .then(function(rawArticleBatch) {
 
-      // only send thru the first 20 articles each hour:
-      // 1000 requests/per day
-      // each article uses 4 queries (split between 2 api keys, = 500 requests/day)
-      // 20 per hour = 480 requests per day
-      var articles = rawArticleBatch.slice(0,20);
+      var articles = rawArticleBatch;
 
       // query mongo and drop specifically these 20
       async.each(articles,
