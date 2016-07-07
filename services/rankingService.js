@@ -39,7 +39,7 @@ var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
       },
 
     function(err, rank) {
-      // console.log("Calculated rank " + rank + " for trend ", trend);
+      console.log("Calculated rank " + rank + " for trend ", trend);
 
       db.Trend.where({id: trend.id}).save({rank: rank || null}, {patch: true})
       .then( function(trend) {
@@ -144,4 +144,6 @@ var calculateRank = function(trendCount, currentTime, trend, doneCallback) {
   });
 };
 
-module.exports = rankAllTrends;
+module.exports = {
+  rankAllTrends
+};

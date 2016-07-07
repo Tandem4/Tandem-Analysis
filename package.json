@@ -1,10 +1,11 @@
 {
   "name": "tandem-analysis",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Analysis Services for Tandem",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "test" : "NODE_ENV=test mocha"
   },
   "repository": {
     "type": "git",
@@ -24,5 +25,12 @@
     "mongodb-bluebird": "^0.1.1",
     "request": "^2.72.0",
     "tandem-db": "^1.0.17"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "knex": "^0.11.7",
+    "mocha": "^2.5.3",
+    "mock-knex": "^0.3.2",
+    "sqlite3": "^3.1.4"
   }
 }

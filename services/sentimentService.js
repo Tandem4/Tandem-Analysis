@@ -70,4 +70,6 @@ var singleSentimentRequest = function(article, doneCallback) {
 	  });
 };
 
-module.exports = allSentimentRequests;
+module.exports = {
+	allSentimentRequests
+};

@@ -147,4 +147,9 @@ var incorporateAllNewTrends = function (articleModelsWithTrends, rankingCallback
   });
 };
 
-module.exports = collectAllTrends;
+// expose additional methods for testing
+module.exports = {
+  filterResults,
+  incorporateAllNewTrends,
+  collectAllTrends
+};
