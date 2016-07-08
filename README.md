@@ -98,3 +98,7 @@
   - Scrum Master       :  Nicole Skoglund
   - Development Team   :  Asifuzzaman Ahmed, Nicole Skoglund
                           Brett Lensvelt, Kani Munidasa
+
+# Contributing
+
+See CONTRIBUTING.md for contribution guidelines.
