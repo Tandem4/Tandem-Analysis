@@ -4,7 +4,7 @@ const bluebird          = require('bluebird');
 const mongoBluebird     = require('mongodb-bluebird');
 const async             = require('async');
 
-const mongoCollection = 'newnews';
+const mongoCollection   = 'newnews';
 
 // *********************************************************************
 //  Analysis Pipeline Step 1:
@@ -39,7 +39,7 @@ var mongoFetch = function(sentimentCallback) {
   });
 };
 
-// helper method for mongoFetch
+// helper iterator method for mongoFetch
 var deleteFromMongo = function(dbConnection, article, doneCallback) {
   dbConnection.collection(mongoCollection)
   .remove(article)

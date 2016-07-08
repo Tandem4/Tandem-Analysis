@@ -59,7 +59,7 @@ var routeTrend = function(trendCount, currentTime, trend, doneCallback) {
   }
 }
 
-// helper method for createOrUpdateTrendRecord: If case
+// helper method for createOrUpdateTrendRecord
 var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) {
   console.log("CREATING A NEW TREND RECORD FOR ", trend.trend_name);
 
@@ -75,7 +75,7 @@ var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) 
   });
 };
 
-// helper method for createOrUpdateTrendRecord: Else case
+// helper method for createOrUpdateTrendRecord
 var checkForUpdates = function(trendCount, currentTime, trend, doneCallback) {
   console.log("CHECKING FOR UPDATES ", trend.trend_name);
 
@@ -130,7 +130,7 @@ var calculateRank = function(trendCount, currentTime, trend, doneCallback) {
 
     var publications = {};
 
-    // create a ranking value for each article within this trend, then sum them
+    // create a ranking value for each article within this trend based on time passed since publication
     var ranks = articlesForThisTrend.map( function(article) {
 
       // this will combine duplicates publications, if any
