@@ -59,7 +59,7 @@
 
 ## Screenshots
 
-  ![Site Architecture](https://cloud.githubusercontent.com/assets/10008938/15844915/2478c052-2c23-11e6-8069-5ed2edce3c05.png)
+  ![Screenshots](https://raw.githubusercontent.com/NCSkoglund/Tandem-Analysis/upstream/images/tandem_screenshots.png)
 
 ## Site Architecture
 
@@ -67,11 +67,11 @@
   
 ## Sequence Diagram 
  
-   ![Site Architecture](https://raw.githubusercontent.com/NCSkoglund/Tandem-Analysis/merge-harmony/images/sequence_diagram.png) 
+   ![Sequence Diagram](https://raw.githubusercontent.com/NCSkoglund/Tandem-Analysis/merge-harmony/images/sequence_diagram.png) 
 
 ## Schema Diagram
 
-  ![Site Architecture](https://raw.githubusercontent.com/Tandem4/Tandem-Analysis/master/images/DB_schema.png)
+  ![Schema Diagram](https://raw.githubusercontent.com/Tandem4/Tandem-Analysis/master/images/DB_schema.png)
 
 ## Folder Guide
 
