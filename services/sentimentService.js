@@ -1,39 +1,45 @@
 const async   = require('async');
 const request = require('request');
 
-const SENTIMENT_URL = process.env.WATSON_SENTIMENT_URL;
-const EMOTION_URL   = process.env.WATSON_EMOTION_URL;
-const ALCHEMY_KEY   = process.env.TANDEM_ALCHEMY_KEY;
-const AlchemyAPI    = require('alchemy-api');
-const Alchemy       = new AlchemyAPI(ALCHEMY_KEY);
+const WATSON_SENTIMENT_URL = process.env.WATSON_SENTIMENT_URL;
+const WATSON_EMOTION_URL   = process.env.WATSON_EMOTION_URL;
+const WATSON_ALCHEMY_KEY   = process.env.TANDEM_ALCHEMY_KEY;
+const Alchemy              = require('alchemy-api')(WATSON_ALCHEMY_KEY);
 
-// *********************************
-//  Watson Sentiment Analysis
-// *********************************
+// ********************************************************
+//  Analysis Pipeline Step 2:
+//
+//  Augment scraped articles with Watson sentiment analysis
+// ********************************************************
 
-var allSentimentRequests = function(batch, trendsCallback) {
+var allSentimentRequests = function(articleBatch, trendsCallback) {
 
-	async.map( batch,
+	console.log("________________________________________________________________");
+	console.log("Beginning allSentimentRequests");
+	console.log("________________________________________________________________");
+
+	async.map( articleBatch,
 
 		         singleSentimentRequest,
+
 		         function (err, results) {
-	             if ( err ) { console.log('An error occurred in AlchemyLanguageService', err); }
+	             if ( err ) { console.log('An error occurred in allSentimentRequests', err); }
 
 	             trendsCallback(results);
 	           });
 };
 
-// Decorator function to append watson sentiment data to article
+// Iterator for allSentimentRequests: append Watson sentiment data to each article
 var singleSentimentRequest = function(article, doneCallback) {
 
 	var queryString = "?url=" +
-            article.article_url +
+        article.article_url +
 	               "&apikey=" +
-	              ALCHEMY_KEY +
+	       WATSON_ALCHEMY_KEY +
 	        "&outputMode=json";
 
-
-		request(EMOTION_URL + queryString, function (error, response, body1) {
+    // API request to Watson emotion analysis
+		request(WATSON_EMOTION_URL + queryString, function (error, response, body1) {
 			if(error) {
 				console.log("error", error)
 			} else {
@@ -49,7 +55,8 @@ var singleSentimentRequest = function(article, doneCallback) {
 					console.log('failed to ping docEmotions proper-like', filteredData_E);
 				}
 
-	      request(SENTIMENT_URL + queryString, function (error, response, body2) {
+        // API request to Watson sentiment analysis
+	      request(WATSON_SENTIMENT_URL + queryString, function (error, response, body2) {
 				  if(error) {
 					  console.log("error", error)
 				  } else {
