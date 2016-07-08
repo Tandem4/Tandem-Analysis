@@ -6,7 +6,13 @@ const async             = require('async');
 
 const mongoCollection = 'newnews';
 
-module.exports = function(sentimentCallback) {
+// *********************************************************************
+//  Analysis Pipeline Step 1:
+//
+//  Fetch scraped article data for sentiment, trend and ranking analysis
+// *********************************************************************
+
+var mongoFetch = function(sentimentCallback) {
 
   mongoBluebird.connect(TANDEM_MONGO_HOST).then( function(db) {
 
@@ -15,26 +21,31 @@ module.exports = function(sentimentCallback) {
 
       var articles = rawArticleBatch;
 
-      // query mongo and drop specifically these 20
       async.each(articles,
 
-                 function(article, doneCallback) {
-                    db.collection(mongoCollection).remove(article)
-                    .then(function() {
-                      doneCallback();
-                    });
-                  },
+                deleteFromMongo.bind(null, db),
 
-                  function() {
-                    sentimentCallback(articles);
+                function() {
+                  sentimentCallback(articles);
 
-                    // close the mongo connection when finished
-                    db.close();
-                  }
+                  // close the mongo connection when finished
+                  db.close();
+                }
       );
     })
     .catch(function(err) {
       console.log("An error occured in mongoFetch", err);
     });
   });
-}
+};
+
+// helper method for mongoFetch
+var deleteFromMongo = function(dbConnection, article, doneCallback) {
+  dbConnection.collection(mongoCollection)
+  .remove(article)
+  .then(function() {
+    doneCallback();
+  });
+};
+
+module.exports = mongoFetch;

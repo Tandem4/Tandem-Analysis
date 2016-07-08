@@ -1,105 +1,120 @@
 const async = require('async');
 const db    = require('tandem-db');
 
-var rankAllTrends = function(trendCache, finalCallback) {
-  // console.log("Beginning rankAllTrends with ", trendCache);
+// **********************************************************************************************
+//  Analysis Pipeline Step 4:
+//
+//  Recalculate ranks for all trends.  Rankings are based on:
+//      1) the number of articles associated with this trend
+//      2) the age of those articles
+//      3) the number of publications in which this trend has been featured
+//
+//  Function Cascade:
+//  -----------------
+//  `rankAllTrends` receives a cache of trend objects
+//      each trend is sent to `routeTrend`, which directs to either:
+//        `createTrendAndSave`
+//          - or -
+//        `checkForUpdates`
+//        (if necessary, both of these will pass thru `createJoinTableAssociations`)
+//          All trends end up in `calculateRank`
+//   final callback of `rankAllTrends` returns to index.js to terminate db connection
+//
+// **********************************************************************************************
 
+var rankAllTrends = function(trendCache, finalCallback) {
+
+  console.log("________________________________________________________________");
+  console.log("Beginning rankAllTrends");
+  console.log("________________________________________________________________");
+
+  // pass these shared variables thru to calculateRank
   var trendCount = Object.keys(trendCache).length;
   var currentTime = Date.now();
 
+  // Given a batch of all existing and new trends, recalcuate each trend's rank
   async.each(trendCache,
 
-            rankSingleTrend.bind(null, trendCount, currentTime),
+            routeTrend.bind(null, trendCount, currentTime),
 
             function(err) {
               if (err) { console.log("An error occurred in rankAllTrends: ", err); }
+
+              // All ranking complete: return to index.js to close db connection
               finalCallback();
             }
   );
 };
 
-// for all trends new and existing, compute a rank based on attributes of the articles associated with it
-var rankSingleTrend = function(trendCount, currentTime, trend, doneCallback) {
+// Iterator for rankAllTrends: Decide whether to process this trend as new or existing
+var routeTrend = function(trendCount, currentTime, trend, doneCallback) {
 
-  // ensure that either version of the conditional completes before moving on to calculateRank
-  async.map( [trend],
+  // if true, it's an existing trend
+  if (!!trend.id) {
+    checkForUpdates(trendCount, currentTime, trend, doneCallback);
 
-      // pass trend to calculateRank via this wrapper function
-      // conditionally executes createTrendAndSave if necessary, otherwise just passes thru to calculateRank
-      function(trend, doneCallback) {
+  // if false, it's a new trend
+  } else {
+    createTrendAndSave(trendCount, currentTime, trend, doneCallback);
+  }
+}
 
-        // if true, it's an existing trend
-        if (!!trend.id) {
-          checkForUpdates(trendCount, currentTime, trend, doneCallback);
-
-        // if false, it's a new trend
-        } else {
-          createTrendAndSave(trendCount, currentTime, trend, doneCallback);
-        }
-      },
-
-    function(err, rank) {
-      console.log("Calculated rank " + rank + " for trend ", trend);
-
-      db.Trend.where({id: trend.id}).save({rank: rank || null}, {patch: true})
-      .then( function(trend) {
-        doneCallback(err, trend);
-      });
-  });
-};
-
-// helper method for rankSingleTrend conditional
+// helper method for createOrUpdateTrendRecord: If case
 var createTrendAndSave = function(trendCount, currentTime, trend, doneCallback) {
-  console.log("CREATING A NEW TREND RECORD FOR ", trend);
+  console.log("CREATING A NEW TREND RECORD FOR ", trend.trend_name);
+
+  // create a new db record for this trend
   db.Trend.forge({ 'trend_name': trend.trend_name }).save()
   .then( function(trendModel) {
 
     // grab the id from the newly created trend model
     trend.id = trendModel.attributes.id;
 
-    // create an entry in the join table
-    trend.article_ids.forEach( function(article_id) {
-      trendModel.articles().attach(article_id);
-    });
-
-    calculateRank(trendCount, currentTime, trend, doneCallback);
+    // create any necessary joins before passing to calculateRank
+    createJoinTableAssociations(trend, trendModel);
   });
 };
 
-// check whether an existing trend has new articles to add
+// helper method for createOrUpdateTrendRecord: Else case
 var checkForUpdates = function(trendCount, currentTime, trend, doneCallback) {
-  console.log("CHECKING FOR UPDATES ", trend);
+  console.log("CHECKING FOR UPDATES ", trend.trend_name);
 
-  // if there are new articles to add, fetch the Trend model to create a join table entry
+  // check whether an existing trend has new articles to add
   if (trend.article_ids) {
     db.Trend.forge({ 'id': trend.id }).fetch()
     .then( function(trendModel) {
-      console.log("FETCHED ", trendModel)
 
-      async.each(trend.article_ids,
-
-                // create an entry in the join table for each article in the list
-                function(article_id, callback) {
-                  trendModel.articles().attach(article_id)
-                  .then(function() {
-                    callback();
-                  });
-                },
-
-                // then recalculate rank
-                function() {
-                  calculateRank(trendCount, currentTime, trend, doneCallback);
-                }
-      );
+      // create any necessary joins before passing to calculateRank
+      createJoinTableAssociations(trend, trendModel);
     });
 
-  //  otherwise just recalculate rank
+  //  otherwise just pass to calculateRank directly
   } else {
     calculateRank(trendCount, currentTime, trend, doneCallback);
   }
-}
+};
 
-// helper method for rankSingleTrend
+// helper method for createTrendAndSave and checkForUpdates
+var createJoinTableAssociations = function(trend, trendModel) {
+
+  async.each(trend.article_ids,
+
+            // create an entry in the join table for each article in the list
+            function(article_id, callback) {
+              trendModel.articles().attach(article_id)
+              .then(function() {
+                callback();
+              });
+            },
+
+            // then recalculate rank
+            function() {
+              calculateRank(trendCount, currentTime, trend, doneCallback);
+            }
+  );
+};
+
+// helper method for createJoinTableAssociations and checkForUpdates
 var calculateRank = function(trendCount, currentTime, trend, doneCallback) {
 
   // Pull the dates and pub_id of all articles associated with this trend
@@ -140,7 +155,15 @@ var calculateRank = function(trendCount, currentTime, trend, doneCallback) {
     // Cross-publication articles should be of a higher value than articles originating from the same publication
     sum *= (Object.keys(publications).length * .25);
 
-    doneCallback(null, sum);
+    console.log("Calculated rank " + sum + " for trend ", trend.trend_name);
+
+    // update the db Trend record with the newly calculated rank
+    db.Trend.where({id: trend.id}).save({rank: sum || null}, {patch: true})
+    .then( function(trend) {
+
+      // return to rankAllTrends
+      doneCallback();
+    });
   });
 };
 

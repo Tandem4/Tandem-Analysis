@@ -1,8 +1,8 @@
 const mongoFetch       = require('./workers/mongoFetch.js');
-const mysql            = require('tandem-db');
 const sentimentService = require('./services/sentimentService.js').allSentimentRequests;
 const trendsService    = require('./services/trendsService.js').collectAllTrends;
 const rankingService   = require('./services/rankingService.js').rankAllTrends;
+const mysql            = require('tandem-db');
 
 // Open Mongo connection to fetch batch of raw article data
 mongoFetch( function(rawData) {
@@ -15,7 +15,9 @@ mongoFetch( function(rawData) {
 
       // Re-rank all trends to incorporate new data
       rankingService(trendCache, function() {
+        console.log("___________________________");
         console.log("Completed Analysis Service.");
+        console.log("___________________________");
 
         // close the MySQL connection when finished
         mysql.db.knex.destroy();
