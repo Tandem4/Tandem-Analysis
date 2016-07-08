@@ -64,6 +64,10 @@
 ## Site Architecture
 
   ![Site Architecture](https://i.imgsafe.org/e0297453a4.png)
+  
+## Sequence Diagram 
+ 
+   ![Site Architecture](https://raw.githubusercontent.com/NCSkoglund/Tandem-Analysis/merge-harmony/images/sequence_diagram.png) 
 
 ## Schema Diagram
 
