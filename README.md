@@ -63,7 +63,7 @@
 
 ## Site Architecture
 
-  ![Site Architecture](https://i.imgsafe.org/e0297453a4.png)
+  ![Site Architecture](https://raw.githubusercontent.com/NCSkoglund/Tandem-Analysis/a80f9271e9ed9ac5420a1f65d5b2864537a2e497/images/Tandem_Architecture.png)
   
 ## Sequence Diagram 
  
