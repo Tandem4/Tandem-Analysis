@@ -57,14 +57,17 @@
   $ npm start
   ```
 
-## Site Architecture
-
-  ![Site Architecture](https://i.imgsafe.org/e0297453a4.png)
-
 ## Screenshots
 
   ![Site Architecture](https://cloud.githubusercontent.com/assets/10008938/15844915/2478c052-2c23-11e6-8069-5ed2edce3c05.png)
 
+## Site Architecture
+
+  ![Site Architecture](https://i.imgsafe.org/e0297453a4.png)
+
+## Schema Diagram
+
+  ![Site Architecture](https://raw.githubusercontent.com/Tandem4/Tandem-Analysis/master/images/DB_schema.png)
 
 ## Folder Guide
 
